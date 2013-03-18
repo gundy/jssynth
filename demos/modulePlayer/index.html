@@ -1,0 +1,55 @@
+<html>
+    <head>
+        <link href="css/app.css" rel="stylesheet">
+        <title>Jsynth Demo</title>
+        <script src="./js/thirdParty/jquery-1.9.1.min.js" type="text/javascript"></script>
+        <script src="../../js/JSSynth.js" type="text/javascript"></script>
+        <script src="../../js/JSWebAudioOutput.js" type="text/javascript"></script>
+        <script src="./js/SongPlayer.js" type="text/javascript"></script>
+        <script src="./js/EffectHandlers.js" type="text/javascript"></script>
+        <script src="./js/MODLoader.js" type="text/javascript"></script>
+        <script src="./js/S3MLoader.js" type="text/javascript"></script>
+        <script src="./s3ms/lavender.s3m.js" type="text/javascript"></script>
+    </head>
+    <title>Pure javascript / Web Audio MOD player</title>
+<body>
+<script>
+//    song = jsynth.MOD.readMODfile(module);
+    song = jssynth.S3M.readS3Mfile(module);
+    player = new jssynth.MOD.Player(song, 4); /* 4 extra channels reserved for FX/game noises etc */
+    audioOut = new jssynth.WebAudioOutput(player.getMixer());
+</script>
+    <div class="songDetails">
+        <div class="row"><div class="header songName">Song Name:</div><div class="value songName">-</div></div>
+        <div class="row"><div class="header songType">Song Type:</div><div class="value songType">M.K.</div></div>
+        <div class="row"><div class="header songChannels">Num channels:</div><div class="value songChannels">4</div></div>
+        <div class="row"><div class="header songLength">Song length:</div><div class="value songLength">0</div></div>
+    </div>
+    <div class="playerDetails">
+        <div class="row"><div class="header songSpeed">Speed:</div><div class="value songSpeed">6/125</div></div>
+        <div class="row"><div class="header songPos">Position: </div><div class="value songPos">0/0</div></div>
+    </div>
+    <div class="controls">
+        <button type="button" onclick="player.previousPos();">&lt;&lt;</button>
+        <button type="button" onclick="audioOut.start();">Start</button>
+        <button type="button" onclick="audioOut.stop();">Stop</button>
+        <button type="button" onclick="player.nextPos();">&gt;&gt;</button>
+        <button type="button" onclick="player.playerState.filter = 1 - player.playerState.filter">Toggle filter</button>
+        <button type="button" onclick="player.loggingEnabled = !player.loggingEnabled">Toggle debug</button>
+    </div>
+<script>
+    $('.value.songName').text(song.name);
+    $('.value.songType').text(song.type);
+    $('.value.songChannels').text(song.channels);
+    $('.value.songLength').text(song.songLength);
+
+    player.registerCallback(function(playerState, channelStateArray) {
+        if (playerState.tick == 0) {
+            $('.value.songSpeed').text("" + playerState.speed + "/" + playerState.bpm);
+            $('.value.songPos').text("" + playerState.pos + "/" + playerState.row);
+        }
+    });
+</script>
+    </body>
+</html>
+

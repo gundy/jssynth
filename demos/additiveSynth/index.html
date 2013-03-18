@@ -1,0 +1,52 @@
+<html>
+    <head>
+        <link href="css/app.css" rel="stylesheet">
+        <link href="css/ui-lightness/jquery-ui-1.10.1.custom.css" rel="stylesheet">
+        <title>Jsynth Demo</title>
+        <script src="./js/thirdParty/jquery-1.9.1.min.js" type="text/javascript"></script>
+        <script src="./js/thirdParty/jquery-ui-1.10.1.custom.min.js" type="text/javascript"></script>
+        <script src="./js/thirdParty/knockout-2.2.1.js" type="text/javascript"></script>
+        <script src="./js/thirdParty/ko.custombindings.js" type="text/javascript"></script>
+        <script src="../../js/JSSynth.js" type="text/javascript"></script>
+        <script src="../../js/JSWebAudioOutput.js" type="text/javascript"></script>
+        <script src="./js/AdditiveSynthViewModel.js" type="text/javascript"></script>
+    </head>
+<body>
+<script type="text/html" id="synth-controls">
+    <div>
+        <div class="global-settings-container">
+            <div class="label">Base Frequency</div>
+            <input data-bind="value: baseFrequency, valueUpdate: 'afterkeydown'"/>
+            <div style="margin: 10px" data-bind="slider: baseFrequency, sliderOptions: {min: 20, max: 500, range: 'min', step: 1}"></div>
+            <div class="label">Global Volume</div>
+            <input data-bind="value: globalVolume, valueUpdate: 'afterkeydown'"/>
+            <div style="margin: 10px" data-bind="slider: globalVolume, sliderOptions: {min: 0, max: 64, range: 'min', step: 1}"></div>
+        </div>
+        <div class="harmonic-container" data-bind="foreach: harmonics">
+            <div class="label">Harmonic</div>
+            <div class="harmonic-freq-mul">
+                <input data-bind="value: freqMul, valueUpdate: 'afterkeydown'" />
+                <div style="margin: 10px" data-bind="slider: freqMul, sliderOptions: {min: 0, max: 20, range: 'min', step: 0.5}"></div>
+            </div>
+            <div class="harmonic-db">
+                <input data-bind="value: dB, valueUpdate: 'afterkeydown'" />
+                <div style="margin: 10px" data-bind="slider: dB, sliderOptions: {min: -90, max: 0, range: 'min', step: 1}"></div>
+            </div>
+            <div class="break"/>
+        </div>
+    </div>
+</script>
+<script>
+    mixer = new jssynth.demos.additive_synth.Mixer(10);  /* display 10 harmonics */
+    audioOut = new jssynth.WebAudioOutput(mixer);
+</script>
+    <button type="button" onclick="audioOut.start();">Start</button>
+    <button type="button" onclick="audioOut.stop();">Stop</button>
+    <div data-bind="template: { name: 'synth-controls', data: mixer }"></div>
+
+<script>
+    ko.applyBindings(mixer);
+</script>
+    </body>
+</html>
+

@@ -35,8 +35,9 @@ might be possible.
 
 Games, demos, interactive UI's, DSP related apps or prototypes, the sky is the limit.
 
-... and that's all there is to is really.
+... and that's all there is to it really.
 
 If you use JSSynth or any of the bundled example code in any projects, please drop by and let 
 us know.
 
+BTW, I apologise profusely for the UI in the demos.  Enough said.

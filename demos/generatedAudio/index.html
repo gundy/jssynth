@@ -1,0 +1,30 @@
+<html>
+<head>
+    <link href="css/app.css" rel="stylesheet">
+    <title>Jsynth Demo</title>
+    <script src="../../js/JSSynth.js" type="text/javascript"></script>
+    <script src="../../js/JSWebAudioOutput.js" type="text/javascript"></script>
+</head>
+<body>
+<script>
+    mixer = new jssynth.Mixer({ numChannels: 8, volume: 64} /* global params */, { volume: 64 } /* default channel params */);
+
+    sample = new jssynth.Sample(function() {
+        var sampLength = 8000;
+        var sampleRate = 44100;
+        var freq = 100;
+        var results = [];
+        results[0] = [];
+        for (var i = 0; i < sampLength; i++) {
+            results[0][i] = Math.sin( (2 * Math.PI * freq/ sampleRate)  * i)* ((sampLength-i) / sampLength);
+        }
+        return results;
+    }, { sampleLength: 8000, channels: 1 });
+    audioOut = new jssynth.WebAudioOutput(mixer);
+</script>
+<button type="button" onclick="audioOut.start();">Start</button>
+<button type="button" onclick="audioOut.stop();">Stop</button>
+<button type="button" onclick="mixer.triggerSample(0, sample, 44100);">Trigger</button>
+<button type="button" onclick="mixer.cut(0);">Cut</button>
+</body>
+</html>
