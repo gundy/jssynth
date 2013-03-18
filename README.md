@@ -6,11 +6,6 @@ JSSynth is a pure JavaScript library for dealing with sampled and synthesised di
 It currently comprises a mixer component and an integration layer to output sampled audio via
 the web audio API as supported in later versions of Chrome (and hopefully other browsers soon too).
 
-One of the demos bundled with JSSynth is a pure JavaScript implementation of a .MOD/.S3M file
-player that has been built on top of the JSSynth API.  This should help to give an idea of what
-might be possible.  Games, demos, interactive UI's, DSP related apps or prototypes, the sky 
-is the limit really.
-
 Here's an example of using the mixer to whet your appetite:
 
 ```JavaScript
@@ -27,7 +22,9 @@ Here's an example of using the mixer to whet your appetite:
 Samples can be either function-based (ie. fully synthetic), or pre-canned sampled digital audio.  
 JSSynth is able to read 8/16/24-bit signed/unsigned mono/stereo samples if required.
 
-And lastly, here is an example of using the S3M player:
+One of the demos bundled with JSSynth is a pure JavaScript implementation of a .MOD/.S3M file
+player that has been built on top of the JSSynth API.  This should help to give an idea of what
+might be possible.  
 
 ```JavaScript
     var song = jssynth.S3M.readS3Mfile(module);
@@ -35,6 +32,8 @@ And lastly, here is an example of using the S3M player:
     var audioOut = new jssynth.WebAudioOutput(player.getMixer());
     audioOut.start();
 ```
+
+Games, demos, interactive UI's, DSP related apps or prototypes, the sky is the limit.
 
 ... and that's all there is to is really.
 
