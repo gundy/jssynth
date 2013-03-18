@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Jssynth : Javascript audio synthesis library" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Jssynth</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/gundy/jssynth">View on GitHub</a>
+
+          <h1 id="project_title">Jssynth</h1>
+          <h2 id="project_tagline">Javascript audio synthesis library</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/gundy/jssynth/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/gundy/jssynth/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>jssynth</h1>
+
+<p>JSSynth is a pure JavaScript library for dealing with sampled and synthesised digital audio.</p>
+
+<p>It currently comprises a mixer component and an integration layer to output sampled audio via
+the web audio API as supported in later versions of Chrome (and hopefully other browsers soon too).</p>
+
+<p>Here's an example of using the mixer to whet your appetite:</p>
+
+<div class="highlight"><pre>    <span class="kd">var</span> <span class="nx">sample</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">jssynth</span><span class="p">.</span><span class="nx">Sample</span><span class="p">(.....);</span>
+
+    <span class="kd">var</span> <span class="nx">mixer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">jssynth</span><span class="p">.</span><span class="nx">Mixer</span><span class="p">({</span> <span class="nx">numChannels</span><span class="o">:</span> <span class="mi">8</span><span class="p">,</span> <span class="nx">volume</span><span class="o">:</span> <span class="mi">64</span><span class="p">});</span> <span class="cm">/* initialise the mixer */</span>
+    <span class="kd">var</span> <span class="nx">audioOut</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">jssynth</span><span class="p">.</span><span class="nx">WebAudioOutput</span><span class="p">(</span><span class="nx">mixer</span><span class="p">);</span>             <span class="cm">/* initialise web audio API w/ mixer */</span>
+    <span class="nx">audioOut</span><span class="p">.</span><span class="nx">start</span><span class="p">();</span>                                             <span class="cm">/* start audio mixing / playing */</span>
+
+    <span class="cm">/* trigger a sample */</span>
+    <span class="nx">mixer</span><span class="p">.</span><span class="nx">triggerSample</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nx">sample</span><span class="p">,</span> <span class="mi">44100</span><span class="p">);</span>                        <span class="cm">/* play sample, channel 0 @ 44.1kHz */</span>
+</pre></div>
+
+<p>Samples can be either function-based (ie. fully synthetic), or pre-canned sampled digital audio.<br>
+JSSynth is able to read 8/16/24-bit signed/unsigned mono/stereo samples if required.</p>
+
+<p>One of the demos bundled with JSSynth is a pure JavaScript implementation of a .MOD/.S3M file
+player that has been built on top of the JSSynth API.  This should help to give an idea of what
+might be possible.  </p>
+
+<div class="highlight"><pre>    <span class="kd">var</span> <span class="nx">song</span> <span class="o">=</span> <span class="nx">jssynth</span><span class="p">.</span><span class="nx">S3M</span><span class="p">.</span><span class="nx">readS3Mfile</span><span class="p">(</span><span class="nx">module</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">player</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">jssynth</span><span class="p">.</span><span class="nx">MOD</span><span class="p">.</span><span class="nx">Player</span><span class="p">(</span><span class="nx">song</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span> <span class="cm">/* allocate 4 extra mixer channels for app use */</span>
+    <span class="kd">var</span> <span class="nx">audioOut</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">jssynth</span><span class="p">.</span><span class="nx">WebAudioOutput</span><span class="p">(</span><span class="nx">player</span><span class="p">.</span><span class="nx">getMixer</span><span class="p">());</span>
+    <span class="nx">audioOut</span><span class="p">.</span><span class="nx">start</span><span class="p">();</span>
+</pre></div>
+
+<p>Games, demos, interactive UI's, DSP related apps or prototypes, the sky is the limit.</p>
+
+<p>... and that's all there is to it really.</p>
+
+<p>If you use JSSynth or any of the bundled example code in any projects, please drop by and let 
+us know.</p>
+
+<p>BTW, I apologise profusely for the UI in the demos.  Enough said.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Jssynth maintained by <a href="https://github.com/gundy">gundy</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
