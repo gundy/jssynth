@@ -308,16 +308,17 @@
         }
     }
 
-    var STEP_REPEATING = function(samplePos, samplePosStep, repEnd, repLen) {
-        samplePos += samplePosStep;
-        while (samplePos >= repEnd) {
-            samplePos -= repLen;
+    var STEP_FUNCS = {  /* step through the sample, key is "isRepeating" flag */
+        true: function(samplePos, samplePosStep, repEnd, repLen) {
+            samplePos += samplePosStep;
+            while (samplePos >= repEnd) {
+                samplePos -= repLen;
+            }
+            return samplePos;
+        },
+        false: function(samplePos, samplePosStep) {
+            return samplePos + samplePosStep;
         }
-        return samplePos;
-    }
-
-    var STEP_NON_REPEATING = function(samplePos, samplePosStep) {
-        return samplePos + samplePosStep;
     }
 
     jssynth.Mixer.prototype.mix = function(sampleRate) {
@@ -350,7 +351,7 @@
                 var repStart = sample.metadata.repeatStart;
                 var repEnd = sample.metadata.repeatEnd;
                 var repLen = repEnd - repStart;
-                var stepFunc = sample.metadata.isRepeating ? STEP_REPEATING : STEP_NON_REPEATING;
+                var stepFunc = STEP_FUNCS[sample.metadata.isRepeating];
                 for (i = 0; (i < numSamples) && (samplePos < sampleLength); i++) {
                     output[0][i] += (leftSampleData[Math.floor(samplePos)] * leftScale);
                     output[1][i] += (rightSampleData[Math.floor(samplePos)] * rightScale);
