@@ -36,3 +36,23 @@ div.value {
 div.header {
     font-weight: bold;
 }
+.hidden {
+   display:none;
+}
+
+table.song-pattern tbody {
+    height: 240px;
+    overflow: auto;
+}
+table.song-pattern {
+    font-size: 8pt;
+    height: 100px;
+}
+table.song-pattern th {
+    font-weight: bold;
+    font-size: 12pt;
+}
+th.pattern-row-num {
+    padding-left: 10px;
+    padding-right: 10px;
+}

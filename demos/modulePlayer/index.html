@@ -37,18 +37,83 @@
         <button type="button" onclick="player.playerState.filter = 1 - player.playerState.filter">Toggle filter</button>
         <button type="button" onclick="player.loggingEnabled = !player.loggingEnabled">Toggle debug</button>
     </div>
+    <div class="song-pattern-container"></div>
 <script>
+var createPatternView = function(song, patternNumber) {
+    var pattern = song.patterns[patternNumber];
+    var patternTable = $('<table></table>').addClass('scrollable song-pattern hidden').addClass('pattern-'+patternNumber);
+
+    var patternTableHeader = $('<thead></thead>');
+    var numColumns = song.channels * 5 + (song.channels +1);
+    patternTableHeader.append(
+            $('<tr></tr>').addClass('pattern-header-row pattern-label')
+                    .append($('<th></th>').attr('colspan',numColumns).text('Pattern #'+patternNumber))
+    );
+    var patternTableHeaderChannelRow = $('<tr></tr>').addClass('pattern-header-row pattern-channels');
+    patternTableHeaderChannelRow.append($('<th></th>').addClass('pattern-header-row pattern-row-num'));
+
+    for (var chan = 0; chan < song.channels; chan++) {
+        var rowData = $('<th></th>').addClass('pattern-header-row pattern-channel').attr('colspan', 5).text(''+(chan+1));
+        patternTableHeaderChannelRow.append(rowData);
+        if (chan < (song.channels - 1)) {
+            patternTableHeaderChannelRow.append($('<th></th>').addClass('pattern-header-row inter-channel-break'));
+        }
+    }
+    patternTableHeader.append(patternTableHeaderChannelRow);
+    patternTable.append(patternTableHeader);
+
+    var patternTableBody = $('<tbody></tbody>');
+
+    for (var row = 0; row < 64; row++) {
+        var rowHtml = $('<tr></tr>').addClass('pattern-row row-num-'+row);
+        rowHtml.append($('<th></th>').addClass('pattern-row-num').text(''+row));
+        for (var chan = 0; chan < song.channels; chan++) {
+            var note = pattern[row][chan];
+
+            rowHtml.append($('<td></td>').addClass('pattern-data').text(note.note <= 0 ? '---' : jssynth.MOD.MOD_PERIOD_TABLE.getName(note.note)));
+            rowHtml.append($('<td></td>').addClass('pattern-data').text(note.sampleNumber <= 0 ? '--' : ("0"+note.sampleNumber.toString(16)).slice(-2)));
+            rowHtml.append($('<td></td>').addClass('pattern-data').text(note.volume <= 0 ? '--' : ("0"+note.volume.toString(16)).slice(-2)));
+            rowHtml.append($('<td></td>').addClass('pattern-data').text(song.effectMap[note.effect].code));
+            rowHtml.append($('<td></td>').addClass('pattern-data').text(("0"+note.parameter.toString(16)).slice(-2)));
+            if (chan < (song.channels-1)) {
+                rowHtml.append($('<td></td>').text('|'));
+            }
+        }
+        patternTableBody.append(rowHtml);
+    }
+    patternTable.append(patternTableBody);
+
+    return patternTable;
+}
+
+$(document).ready(function(){
+    /*
+    for (var i = 0; i < song.patterns.length; i++) {
+        $('.song-pattern-container').append(createPatternView(song, i));
+    }
+    */
+    $('.song-pattern-container').append(createPatternView(song, 0));
+    $('.song-pattern.pattern-0').removeClass('hidden');
+
     $('.value.songName').text(song.name);
     $('.value.songType').text(song.type);
     $('.value.songChannels').text(song.channels);
     $('.value.songLength').text(song.songLength);
 
     player.registerCallback(function(playerState, channelStateArray) {
-        if (playerState.tick == 0) {
+        if (playerState.tick === 0) {
+            /*
+            if (playerState.row === 0) {
+                $('.song-pattern').addClass('hidden');
+                $('.song-pattern.pattern-'+song.orders[playerState.pos]).removeClass('hidden');
+            }
+            */
             $('.value.songSpeed').text("" + playerState.speed + "/" + playerState.bpm);
             $('.value.songPos').text("" + playerState.pos + "/" + playerState.row);
         }
     });
+
+});
 </script>
     </body>
 </html>
