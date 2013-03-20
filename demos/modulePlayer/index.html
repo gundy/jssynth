@@ -1,5 +1,6 @@
 <html>
     <head>
+        <link href='http://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'>
         <link href="css/app.css" rel="stylesheet">
         <title>Jsynth Demo</title>
         <script src="./js/thirdParty/jquery-1.9.1.min.js" type="text/javascript"></script>
@@ -9,12 +10,13 @@
         <script src="./js/EffectHandlers.js" type="text/javascript"></script>
         <script src="./js/MODLoader.js" type="text/javascript"></script>
         <script src="./js/S3MLoader.js" type="text/javascript"></script>
+        <!--<script src="./mods/klisje.mod.js" type="text/javascript"></script>-->
         <script src="./s3ms/lavender.s3m.js" type="text/javascript"></script>
     </head>
     <title>Pure javascript / Web Audio MOD player</title>
 <body>
 <script>
-//    song = jsynth.MOD.readMODfile(module);
+//    song = jssynth.MOD.readMODfile(module);
     song = jssynth.S3M.readS3Mfile(module);
     player = new jssynth.MOD.Player(song, 4); /* 4 extra channels reserved for FX/game noises etc */
     audioOut = new jssynth.WebAudioOutput(player.getMixer());
@@ -35,64 +37,68 @@
         <button type="button" onclick="audioOut.stop();">Stop</button>
         <button type="button" onclick="player.nextPos();">&gt;&gt;</button>
         <button type="button" onclick="player.playerState.filter = 1 - player.playerState.filter">Toggle filter</button>
-        <button type="button" onclick="player.loggingEnabled = !player.loggingEnabled">Toggle debug</button>
+        <!--<button type="button" onclick="player.loggingEnabled = !player.loggingEnabled">Toggle debug</button>-->
     </div>
     <div class="song-pattern-container"></div>
 <script>
+var getDummyRow = function(song) {
+    var dummyRow = $('<tr></tr>').addClass('pattern-row');
+    dummyRow.append($('<th></th>').addClass('pattern-row-num').text('-'));
+    for (var chan = 0; chan < song.channels; chan++) {
+        dummyRow.append($('<td></td>').addClass('pattern-data').text('--- -- -- - --'));
+    }
+    return dummyRow;
+}
+
 var createPatternView = function(song, patternNumber) {
     var pattern = song.patterns[patternNumber];
     var patternTable = $('<table></table>').addClass('scrollable song-pattern hidden').addClass('pattern-'+patternNumber);
-
-    var patternTableHeader = $('<thead></thead>');
-    var numColumns = song.channels * 5 + (song.channels +1);
-    patternTableHeader.append(
-            $('<tr></tr>').addClass('pattern-header-row pattern-label')
-                    .append($('<th></th>').attr('colspan',numColumns).text('Pattern #'+patternNumber))
-    );
-    var patternTableHeaderChannelRow = $('<tr></tr>').addClass('pattern-header-row pattern-channels');
-    patternTableHeaderChannelRow.append($('<th></th>').addClass('pattern-header-row pattern-row-num'));
-
-    for (var chan = 0; chan < song.channels; chan++) {
-        var rowData = $('<th></th>').addClass('pattern-header-row pattern-channel').attr('colspan', 5).text(''+(chan+1));
-        patternTableHeaderChannelRow.append(rowData);
-        if (chan < (song.channels - 1)) {
-            patternTableHeaderChannelRow.append($('<th></th>').addClass('pattern-header-row inter-channel-break'));
-        }
-    }
-    patternTableHeader.append(patternTableHeaderChannelRow);
-    patternTable.append(patternTableHeader);
-
     var patternTableBody = $('<tbody></tbody>');
 
     for (var row = 0; row < 64; row++) {
         var rowHtml = $('<tr></tr>').addClass('pattern-row row-num-'+row);
+        if (row % 2 == 1) {
+            rowHtml.addClass('alternate-row');
+        }
         rowHtml.append($('<th></th>').addClass('pattern-row-num').text(''+row));
         for (var chan = 0; chan < song.channels; chan++) {
             var note = pattern[row][chan];
 
-            rowHtml.append($('<td></td>').addClass('pattern-data').text(note.note <= 0 ? '---' : jssynth.MOD.MOD_PERIOD_TABLE.getName(note.note)));
-            rowHtml.append($('<td></td>').addClass('pattern-data').text(note.sampleNumber <= 0 ? '--' : ("0"+note.sampleNumber.toString(16)).slice(-2)));
-            rowHtml.append($('<td></td>').addClass('pattern-data').text(note.volume <= 0 ? '--' : ("0"+note.volume.toString(16)).slice(-2)));
-            rowHtml.append($('<td></td>').addClass('pattern-data').text(song.effectMap[note.effect].code));
-            rowHtml.append($('<td></td>').addClass('pattern-data').text(("0"+note.parameter.toString(16)).slice(-2)));
-            if (chan < (song.channels-1)) {
-                rowHtml.append($('<td></td>').text('|'));
+            var text = "";
+            if (note.note > 0) {
+                text = text + jssynth.MOD.MOD_PERIOD_TABLE.getName(note.note) + " ";
+            } else {
+                text = text + "--- "
             }
+            if (note.sampleNumber > 0) {
+                text = text + ("0"+note.sampleNumber.toString(16)).slice(-2) + " ";
+            } else {
+                text = text + "-- "
+            }
+            if (note.volume > 0) {
+                text = text + ("0"+note.volume.toString(16)).slice(-2) + " ";
+            } else {
+                text = text + "-- "
+            }
+
+            text = text + song.effectMap[note.effect].code + " ";
+            text = text + ("0"+note.parameter.toString(16)).slice(-2);
+
+            rowHtml.append($('<td></td>').addClass('pattern-data').text(text));
         }
         patternTableBody.append(rowHtml);
     }
+
     patternTable.append(patternTableBody);
 
     return patternTable;
 }
 
 $(document).ready(function(){
-    /*
     for (var i = 0; i < song.patterns.length; i++) {
         $('.song-pattern-container').append(createPatternView(song, i));
     }
-    */
-    $('.song-pattern-container').append(createPatternView(song, 0));
+    $('.song-pattern.pattern-'+song.orders[0]).removeClass('hidden');
     $('.song-pattern.pattern-0').removeClass('hidden');
 
     $('.value.songName').text(song.name);
@@ -100,16 +106,33 @@ $(document).ready(function(){
     $('.value.songChannels').text(song.channels);
     $('.value.songLength').text(song.songLength);
 
+    var songPatternContainerSelector = $('.song-pattern-container');
+    var previousVisiblePattern = 0;
+    var previousPlayingRow = 0;
+    var patternSelectors = [];
+    for (var i = 0; i < song.patterns.length; i++) {
+        patternSelectors[i] = $('.song-pattern.pattern-'+i);
+    }
+    var songSpeedSelector = $('.value.songSpeed');
+    var songPosSelector = $('.value.songPos');
+
     player.registerCallback(function(playerState, channelStateArray) {
+
         if (playerState.tick === 0) {
-            /*
             if (playerState.row === 0) {
-                $('.song-pattern').addClass('hidden');
-                $('.song-pattern.pattern-'+song.orders[playerState.pos]).removeClass('hidden');
+                patternSelectors[previousVisiblePattern].addClass('hidden');
+                patternSelectors[song.orders[playerState.pos]].removeClass('hidden');
             }
-            */
-            $('.value.songSpeed').text("" + playerState.speed + "/" + playerState.bpm);
-            $('.value.songPos').text("" + playerState.pos + "/" + playerState.row);
+            patternSelectors[previousVisiblePattern].find('tr.row-num-'+previousPlayingRow).removeClass('playing');
+            patternSelectors[song.orders[playerState.pos]].find('tr.row-num-'+playerState.row).addClass('playing');
+
+            var scrollTo = patternSelectors[song.orders[playerState.pos]].find('tr.row-num-'+playerState.row);
+            songPatternContainerSelector.scrollTop(scrollTo.offset().top - songPatternContainerSelector.offset().top + songPatternContainerSelector.scrollTop());
+
+            previousVisiblePattern = song.orders[playerState.pos];
+            previousPlayingRow = playerState.row;
+            songSpeedSelector.text("" + playerState.speed + "/" + playerState.bpm);
+            songPosSelector.text("" + playerState.pos + "/" + playerState.row);
         }
     });
 

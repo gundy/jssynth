@@ -8,17 +8,18 @@ div.row {
     display: block;
 }
 div.songDetails {
-    background: #fab;
+    background: #020505;
     border: 1px solid grey;
     border-radius: 10px;
     margin: 20px;
-
+    width: 500px;
 }
 div.playerDetails {
-    background: #bad;
+    background: #050205;
     border: 1px solid grey;
     margin: 20px;
     border-radius: 10px;
+    width: 350px;
 }
 div.controls {
     margin: 20px;
@@ -31,7 +32,7 @@ div.header {
     width: 150px;
 }
 div.value {
-    width: 350px;
+    width: 150px;
 }
 div.header {
     font-weight: bold;
@@ -40,13 +41,33 @@ div.header {
    display:none;
 }
 
-table.song-pattern tbody {
-    height: 240px;
-    overflow: auto;
+div.song-pattern-container {
+    height: 400px;
+    overflow-y: hidden;
+    display:block;
+    position:absolute;
 }
 table.song-pattern {
+    font-family: 'Droid Sans Mono', sans-serif;
     font-size: 8pt;
-    height: 100px;
+    border-collapse: collapse;
+}
+table.song-pattern tr.playing {
+    background-color: #022;
+}
+table.song-pattern tr.alternate-row.playing {
+    background-color: #002020;
+}
+table.song-pattern tr.alternate-row {
+    background-color: #050505;
+}
+table.song-pattern td {
+    border-left: 1px solid #222;
+    border-right: 1px solid #222;
+    border-top: 1px solid #211;
+    border-bottom: 1px solid #211;
+    padding-left: 5px;
+    padding-right: 5px;
 }
 table.song-pattern th {
     font-weight: bold;

@@ -123,7 +123,7 @@
                 channelState.effectState.portAmt = param * 4;
             },
             tick: function(mixer, chan, param, playerState, channelState) {
-                channelState.period -= channelState.effectState.portAmt;
+                channelState.period += channelState.effectState.portAmt;
                 if (channelState.period > MAX_SLIDE_PERIOD) {
                     channelState.period = MAX_SLIDE_PERIOD;
                 }
