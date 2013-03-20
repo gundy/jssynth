@@ -340,7 +340,7 @@
         }),
         MOD_PT_SET_VIBRATO_WAVEFORM: jssynth.merge(TEMPLATE_EFFECT, {
             div:function(mixer, chan, param, playerState, channelState) {
-                channelState.vibratoParams.waveform = param & 0x07;
+                channelState.effectParams.vibratoParams.waveform = param & 0x07;
             }
         }),
         MOD_PT_SET_FINETUNE: jssynth.merge(TEMPLATE_EFFECT, {
@@ -377,7 +377,7 @@
         }),
         MOD_PT_SET_TREMOLO_WAVEFORM: jssynth.merge(TEMPLATE_EFFECT, {
             div:function(mixer, chan, param, playerState, channelState) {
-                channelState.tremoloParams.waveform = param & 0x07;
+                channelState.effectState.tremoloParams.waveform = param & 0x07;
             }
         }),
         MOD_PT_16_POS_PAN: jssynth.merge(TEMPLATE_EFFECT, {

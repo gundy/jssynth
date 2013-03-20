@@ -33,9 +33,9 @@
      * @param mixer A mixer function that gets called periodically to produce new sampled audio data.
      * @constructor
      */
-    jssynth.WebAudioOutput = function(mixer) {
+    jssynth.WebAudioOutput = function(mixer, bufferSize) {
         this.context = new webkitAudioContext();
-        this.node = this.context.createScriptProcessor(WA_BUF_SIZE, 0, WA_NUM_OUTPUT_CHANNELS);
+        this.node = this.context.createScriptProcessor(bufferSize || WA_BUF_SIZE, 0, WA_NUM_OUTPUT_CHANNELS);
 
         this.nextSamples = null;
         this.nextSamplesOffset = 0;

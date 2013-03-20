@@ -19,7 +19,7 @@
 //    song = jssynth.MOD.readMODfile(module);
     song = jssynth.S3M.readS3Mfile(module);
     player = new jssynth.MOD.Player(song, 4); /* 4 extra channels reserved for FX/game noises etc */
-    audioOut = new jssynth.WebAudioOutput(player.getMixer());
+    audioOut = new jssynth.WebAudioOutput(player.getMixer(), 4096);  /* 4096 = buffer size */
 </script>
     <div class="songDetails">
         <div class="row"><div class="header songName">Song Name:</div><div class="value songName">-</div></div>
@@ -32,12 +32,11 @@
         <div class="row"><div class="header songPos">Position: </div><div class="value songPos">0/0</div></div>
     </div>
     <div class="controls">
-        <button type="button" onclick="player.previousPos();">&lt;&lt;</button>
-        <button type="button" onclick="audioOut.start();">Start</button>
-        <button type="button" onclick="audioOut.stop();">Stop</button>
-        <button type="button" onclick="player.nextPos();">&gt;&gt;</button>
-        <button type="button" onclick="player.playerState.filter = 1 - player.playerState.filter">Toggle filter</button>
-        <!--<button type="button" onclick="player.loggingEnabled = !player.loggingEnabled">Toggle debug</button>-->
+        <button class="button" type="button" onclick="player.previousPos();">&lt;&lt;</button>
+        <button class="button" type="button" onclick="audioOut.start();">Start</button>
+        <button class="button" type="button" onclick="audioOut.stop();">Stop</button>
+        <button class="button" type="button" onclick="player.nextPos();">&gt;&gt;</button>
+        <button class="button" type="button" onclick="player.playerState.filter = 1 - player.playerState.filter">Toggle filter</button>
     </div>
     <div class="song-pattern-container"></div>
 <script>
