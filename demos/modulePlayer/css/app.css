@@ -37,9 +37,12 @@ body {
 div.titlebar {
     font-size: 40px;
     font-weight: bold;
+    font-style: italic;
     color: #034;
     padding: 10px;
     border-bottom: solid 1px darkgrey;
+    border-top: solid 1px darkgrey;
+    background-color: #151515;
 }
 div.row {
     display: block;

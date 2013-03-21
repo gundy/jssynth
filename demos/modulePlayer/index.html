@@ -16,7 +16,7 @@
     <title>Pure javascript / Web Audio MOD player</title>
 <body>
     <div class="titlebar">
-        <span>JSSynth demo: S3M/MOD player in pure JavaScript</span>
+        <span>JSSynth demo: JavaScript+HTML5 MOD/S3M player</span>
     </div>
 
     <div class="songDetails">
@@ -80,7 +80,11 @@ var createPatternView = function(song, patternNumber) {
             }
 
             text = text + song.effectMap[note.effect].code + " ";
-            text = text + ("0"+note.parameter.toString(16)).slice(-2);
+            if (note.parameter === 0x00 && note.effect === 0x00) {
+                text = text + "--";
+            } else {
+                text = text + ("0"+note.parameter.toString(16)).slice(-2);
+            }
 
             rowHtml.append($('<td></td>').addClass('pattern-data').text(text));
         }
