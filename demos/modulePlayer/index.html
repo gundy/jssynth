@@ -10,7 +10,6 @@
         <script src="./js/EffectHandlers.js" type="text/javascript"></script>
         <script src="./js/MODLoader.js" type="text/javascript"></script>
         <script src="./js/S3MLoader.js" type="text/javascript"></script>
-        <!--<script src="./mods/klisje.mod.js" type="text/javascript"></script>-->
         <script src="./s3ms/lavender.s3m.js" type="text/javascript"></script>
     </head>
     <title>Pure javascript / Web Audio MOD player</title>
@@ -66,20 +65,25 @@ var createPatternView = function(song, patternNumber) {
             if (note.note > 0) {
                 text = text + jssynth.MOD.MOD_PERIOD_TABLE.getName(note.note) + " ";
             } else {
-                text = text + "--- "
+                text = text + "--- ";
             }
             if (note.sampleNumber > 0) {
                 text = text + ("0"+note.sampleNumber.toString(16)).slice(-2) + " ";
             } else {
-                text = text + "-- "
+                text = text + "-- ";
             }
             if (note.volume > 0) {
                 text = text + ("0"+note.volume.toString(16)).slice(-2) + " ";
             } else {
-                text = text + "-- "
+                text = text + "-- ";
             }
 
-            text = text + song.effectMap[note.effect].code + " ";
+            if (note.parameter === 0x00 && note.effect === 0x00) {
+                text = text + "- ";
+            } else {
+                text = text + song.effectMap[note.effect].code + " ";
+            }
+
             if (note.parameter === 0x00 && note.effect === 0x00) {
                 text = text + "--";
             } else {
@@ -97,11 +101,11 @@ var createPatternView = function(song, patternNumber) {
 }
 
 window.onload = function(){
-    //    song = jssynth.MOD.readMODfile(module);
+//        song = jssynth.MOD.readMODfile(module);
 
     song = jssynth.S3M.readS3Mfile(module);
     player = new jssynth.MOD.Player(song, 4); /* 4 extra channels reserved for FX/game noises etc */
-    audioOut = new jssynth.WebAudioOutput(player.getMixer(), 2048);  /* 4096 = buffer size */
+    audioOut = new jssynth.WebAudioOutput(player.getMixer(), 4096);  /* 4096 = buffer size */
 
     for (var i = 0; i < song.patterns.length; i++) {
         $('.song-pattern-container').append(createPatternView(song, i));

@@ -165,7 +165,7 @@
         }),
         'MOD_VIBRATO': jssynth.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState, period) {
-                vibParams = channelState.effectState.vibratoParams || {
+                var vibParams = channelState.effectState.vibratoParams || {
                     waveform: 0,
                     pos: 0,
                     depth: 0,
@@ -625,7 +625,7 @@
         }),
         S3M_FINE_VIBRATO: jssynth.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState, period) {
-                vibParams = channelState.effectState.vibratoParams || {
+                var vibParams = channelState.effectState.vibratoParams || {
                     waveform: 0,
                     pos: 0,
                     depth: 0,
