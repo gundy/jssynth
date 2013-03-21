@@ -34,7 +34,13 @@ body {
       position:relative;
       top:1px;
 }
-
+div.titlebar {
+    font-size: 40px;
+    font-weight: bold;
+    color: #034;
+    padding: 10px;
+    border-bottom: solid 1px darkgrey;
+}
 div.row {
     display: block;
 }
@@ -51,6 +57,8 @@ div.playerDetails {
     display: inline-block;
 }
 div.controls {
+    display: inline-block;
+    width: 200px;
     margin: 20px;
 }
 div.header,div.value {
@@ -58,13 +66,13 @@ div.header,div.value {
     padding: 5px;
 }
 div.header {
+    font-weight: bold;
     width: 150px;
+    color: #666;
 }
 div.value {
     width: 150px;
-}
-div.header {
-    font-weight: bold;
+    color: #444;
 }
 .hidden {
    display:none;

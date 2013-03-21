@@ -34,15 +34,18 @@
      * @constructor
      */
     jssynth.WebAudioOutput = function(mixer, bufferSize) {
-        this.context = new webkitAudioContext();
-        this.node = this.context.createScriptProcessor(bufferSize || WA_BUF_SIZE, 0, WA_NUM_OUTPUT_CHANNELS);
-
+        if('webkitAudioContext' in window) {
+            this.context = new webkitAudioContext();
+        } else {
+            throw "Unable to initialise web audio context";
+        }
+        this.node = this.context.createJavaScriptNode(bufferSize || WA_BUF_SIZE, 0, WA_NUM_OUTPUT_CHANNELS);
         this.nextSamples = null;
         this.nextSamplesOffset = 0;
 
         var self = this;
 
-        this.node.onaudioprocess = function(event) {
+        var processSamples = function(event) {
             var outputBuffer = event.outputBuffer;
             var sampleRate = outputBuffer.sampleRate;
             var bufferLength = outputBuffer.length;
@@ -69,6 +72,8 @@
                 }
             }
         }
+
+        this.node.onaudioprocess = processSamples;
     }
 
     /**

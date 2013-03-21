@@ -15,12 +15,10 @@
     </head>
     <title>Pure javascript / Web Audio MOD player</title>
 <body>
-<script>
-//    song = jssynth.MOD.readMODfile(module);
-    song = jssynth.S3M.readS3Mfile(module);
-    player = new jssynth.MOD.Player(song, 4); /* 4 extra channels reserved for FX/game noises etc */
-    audioOut = new jssynth.WebAudioOutput(player.getMixer(), 4096);  /* 4096 = buffer size */
-</script>
+    <div class="titlebar">
+        <span>JSSynth demo: S3M/MOD player in pure JavaScript</span>
+    </div>
+
     <div class="songDetails">
         <div class="row"><div class="header songName">Song Name:</div><div class="value songName">-</div></div>
         <div class="row"><div class="header songType">Song Type:</div><div class="value songType">M.K.</div></div>
@@ -29,12 +27,13 @@
     </div>
     <div class="playerDetails">
         <div class="row"><div class="header songSpeed">Speed:</div><div class="value songSpeed">6/125</div></div>
-        <div class="row"><div class="header songPos">Position: </div><div class="value songPos">0/0</div></div>
+        <div class="row"><div class="header songPos">Position/Pattern: </div><div class="value songPos">0/0</div></div>
+        <div class="row"><div class="header songRow">Row: </div><div class="value songRow">0</div></div>
     </div>
     <div class="controls">
-        <button class="button" type="button" onclick="player.previousPos();">&lt;&lt;</button>
         <button class="button" type="button" onclick="audioOut.start();">Start</button>
         <button class="button" type="button" onclick="audioOut.stop();">Stop</button>
+        <button class="button" type="button" onclick="player.previousPos();">&lt;&lt;</button>
         <button class="button" type="button" onclick="player.nextPos();">&gt;&gt;</button>
         <button class="button" type="button" onclick="player.playerState.filter = 1 - player.playerState.filter">Toggle filter</button>
     </div>
@@ -93,7 +92,13 @@ var createPatternView = function(song, patternNumber) {
     return patternTable;
 }
 
-$(document).ready(function(){
+window.onload = function(){
+    //    song = jssynth.MOD.readMODfile(module);
+
+    song = jssynth.S3M.readS3Mfile(module);
+    player = new jssynth.MOD.Player(song, 4); /* 4 extra channels reserved for FX/game noises etc */
+    audioOut = new jssynth.WebAudioOutput(player.getMixer(), 2048);  /* 4096 = buffer size */
+
     for (var i = 0; i < song.patterns.length; i++) {
         $('.song-pattern-container').append(createPatternView(song, i));
     }
@@ -114,28 +119,36 @@ $(document).ready(function(){
     }
     var songSpeedSelector = $('.value.songSpeed');
     var songPosSelector = $('.value.songPos');
+    var songRowSelector = $('.value.songRow');
+    var updateTimeout;
 
     player.registerCallback(function(playerState, channelStateArray) {
-
         if (playerState.tick === 0) {
-            if (playerState.row === 0) {
-                patternSelectors[previousVisiblePattern].addClass('hidden');
-                patternSelectors[song.orders[playerState.pos]].removeClass('hidden');
+            if (updateTimeout) {
+                window.clearTimeout(updateTimeout);
             }
-            patternSelectors[previousVisiblePattern].find('tr.row-num-'+previousPlayingRow).removeClass('playing');
-            patternSelectors[song.orders[playerState.pos]].find('tr.row-num-'+playerState.row).addClass('playing');
+            updateTimeout = setTimeout(function() {
+                if (song.orders[playerState.pos] !== previousVisiblePattern) {
+                    patternSelectors[previousVisiblePattern].addClass('hidden');
+                    patternSelectors[song.orders[playerState.pos]].removeClass('hidden');
+                }
+                patternSelectors[previousVisiblePattern].find('tr.row-num-'+previousPlayingRow).removeClass('playing');
+                patternSelectors[song.orders[playerState.pos]].find('tr.row-num-'+playerState.row).addClass('playing');
 
-            var scrollTo = patternSelectors[song.orders[playerState.pos]].find('tr.row-num-'+playerState.row);
-            songPatternContainerSelector.scrollTop(scrollTo.offset().top - songPatternContainerSelector.offset().top + songPatternContainerSelector.scrollTop());
+                var scrollTo = patternSelectors[song.orders[playerState.pos]].find('tr.row-num-'+playerState.row);
+                songPatternContainerSelector.scrollTop(scrollTo.offset().top - songPatternContainerSelector.offset().top + songPatternContainerSelector.scrollTop());
 
-            previousVisiblePattern = song.orders[playerState.pos];
-            previousPlayingRow = playerState.row;
-            songSpeedSelector.text("" + playerState.speed + "/" + playerState.bpm);
-            songPosSelector.text("" + playerState.pos + "/" + playerState.row);
+                previousVisiblePattern = song.orders[playerState.pos];
+                previousPlayingRow = playerState.row;
+                songSpeedSelector.text("" + playerState.speed + "/" + playerState.bpm);
+                songPosSelector.text("" + playerState.pos + "/" + song.orders[playerState.pos]);
+                songRowSelector.text("" +playerState.row);
+                updateTimeout = null;
+            }, 0);
         }
     });
 
-});
+};
 </script>
     </body>
 </html>
