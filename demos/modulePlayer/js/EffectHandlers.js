@@ -20,6 +20,7 @@
 (function() {
     jssynth.ns("MOD");
     jssynth.ns("S3M");
+    jssynth.ns("XM");
 
     var VIBRATO_TABLE = [
         /* Waveform #0: SINE WAVE TABLE ~~~~~~~~.  */
@@ -711,6 +712,26 @@
         0x0d: { code: 'd', effect: jssynth.MOD.EFFECTS.MOD_PATTERN_BREAK },
         0x0e: { code: 'e', effect: jssynth.MOD.EFFECTS.MOD_PROTRACKER },
         0x0f: { code: 'f', effect: jssynth.MOD.EFFECTS.MOD_SET_SPEED },
+        0x10: { code: 'g', effect: TEMPLATE_EFFECT },
+        0x11: { code: 'h', effect: TEMPLATE_EFFECT },
+        0x12: { code: 'i', effect: TEMPLATE_EFFECT },
+        0x13: { code: 'j', effect: TEMPLATE_EFFECT },
+        0x14: { code: 'k', effect: TEMPLATE_EFFECT },
+        0x15: { code: 'l', effect: TEMPLATE_EFFECT },
+        0x16: { code: 'm', effect: TEMPLATE_EFFECT },
+        0x17: { code: 'n', effect: TEMPLATE_EFFECT },
+        0x18: { code: 'o', effect: TEMPLATE_EFFECT },
+        0x19: { code: 'p', effect: TEMPLATE_EFFECT },
+        0x1a: { code: 'q', effect: TEMPLATE_EFFECT },
+        0x1b: { code: 'r', effect: TEMPLATE_EFFECT },
+        0x1c: { code: 's', effect: TEMPLATE_EFFECT },
+        0x1d: { code: 't', effect: TEMPLATE_EFFECT },
+        0x1e: { code: 'u', effect: TEMPLATE_EFFECT },
+        0x1f: { code: 'v', effect: TEMPLATE_EFFECT },
+        0x20: { code: 'w', effect: TEMPLATE_EFFECT },
+        0x21: { code: 'x', effect: TEMPLATE_EFFECT },
+        0x22: { code: 'y', effect: TEMPLATE_EFFECT },
+        0x23: { code: 'z', effect: TEMPLATE_EFFECT },
 
         /* protracker commands */
         0xe0: jssynth.MOD.EFFECTS.MOD_PT_SET_FILTER,
@@ -772,6 +793,44 @@
         /* U */  0x15: { code: 'U', effect: jssynth.MOD.EFFECTS.S3M_FINE_VIBRATO },
         /* V */  0x16: { code: 'V', effect: jssynth.MOD.EFFECTS.S3M_SET_GLOBAL_VOLUME }
 
+    }
+
+
+    jssynth.XM.XM_EFFECT_MAP = {
+        0x00: { code: '0', effect: jssynth.MOD.EFFECTS.MOD_ARPEGGIO },
+        0x01: { code: '1', effect: jssynth.MOD.EFFECTS.MOD_PORTA_UP },
+        0x02: { code: '2', effect: jssynth.MOD.EFFECTS.MOD_PORTA_DOWN },
+        0x03: { code: '3', effect: jssynth.MOD.EFFECTS.MOD_PORTA_TO_NOTE },
+        0x04: { code: '4', effect: jssynth.MOD.EFFECTS.MOD_VIBRATO },
+        0x05: { code: '5', effect: jssynth.MOD.EFFECTS.MOD_PORTA_PLUS_VOL_SLIDE },
+        0x06: { code: '6', effect: jssynth.MOD.EFFECTS.MOD_VIBRATO_PLUS_VOL_SLIDE },
+        0x07: { code: '7', effect: jssynth.MOD.EFFECTS.MOD_TREMOLO },
+        0x08: { code: '8', effect: jssynth.MOD.EFFECTS.MOD_PAN },
+        0x09: { code: '9', effect: jssynth.MOD.EFFECTS.MOD_SAMPLE_OFFSET },
+        0x0a: { code: 'a', effect: jssynth.MOD.EFFECTS.MOD_VOLUME_SLIDE },
+        0x0b: { code: 'b', effect: jssynth.MOD.EFFECTS.MOD_JUMP_TO_PATTERN },
+        0x0c: { code: 'c', effect: jssynth.MOD.EFFECTS.MOD_SET_VOLUME },
+        0x0d: { code: 'd', effect: jssynth.MOD.EFFECTS.MOD_PATTERN_BREAK },
+        0x0e: { code: 'e', effect: jssynth.MOD.EFFECTS.MOD_PROTRACKER },
+        0x0f: { code: 'f', effect: jssynth.MOD.EFFECTS.MOD_SET_SPEED },
+
+        /* protracker commands */
+        0xe0: jssynth.MOD.EFFECTS.MOD_PT_SET_FILTER,
+        0xe1: jssynth.MOD.EFFECTS.MOD_PT_FINE_PORTA_UP,
+        0xe2: jssynth.MOD.EFFECTS.MOD_PT_FINE_PORTA_DOWN,
+        0xe3: jssynth.MOD.EFFECTS.MOD_PT_GLISSANDO_CONTROL,
+        0xe4: jssynth.MOD.EFFECTS.MOD_PT_SET_VIBRATO_WAVEFORM,
+        0xe5: jssynth.MOD.EFFECTS.MOD_PT_SET_FINETUNE,
+        0xe6: jssynth.MOD.EFFECTS.MOD_PT_PATTERN_LOOP,
+        0xe7: jssynth.MOD.EFFECTS.MOD_PT_SET_TREMOLO_WAVEFORM,
+        0xe8: jssynth.MOD.EFFECTS.MOD_PT_16_POS_PAN,
+        0xe9: jssynth.MOD.EFFECTS.MOD_PT_RETRIG_NOTE,
+        0xea: jssynth.MOD.EFFECTS.MOD_PT_FINE_VOLSLIDE_UP,
+        0xeb: jssynth.MOD.EFFECTS.MOD_PT_FINE_VOLSLIDE_DOWN,
+        0xec: jssynth.MOD.EFFECTS.MOD_PT_CUT_NOTE,
+        0xed: jssynth.MOD.EFFECTS.MOD_PT_DELAY_NOTE,
+        0xee: jssynth.MOD.EFFECTS.MOD_PT_DELAY_PATTERN,
+        0xef: jssynth.MOD.EFFECTS.MOD_PT_INVERT_LOOP
     }
 
 })();

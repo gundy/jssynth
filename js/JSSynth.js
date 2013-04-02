@@ -294,9 +294,9 @@
 
 
     /* TODO; not sure if things need to get this complicated for now */
-    var calculatePanMatrix = function(pos) {
+    var calculatePanMatrix = function(pp) {
         if (pp >= -1 && pp <= 1) {
-            var pp = (pos + 1) / 2;   /* shift values from -1 to 1, to be in the range 0..1 (left -> right) */
+            var pp = (pp + 1) / 2;   /* shift values from -1 to 1, to be in the range 0..1 (left -> right) */
             return {
                 ll: 1-pp, /* left channel, % left mix */
                 lr: 0, /* left channel, % right mix - TODO */

@@ -66,7 +66,6 @@
             patternOfs += 4;
         }
 
-        allEffects = [];
         song.patterns = [];
         for (var i = 0; i <= maxPatternNum; i++) {
             var pattern = [];
@@ -76,7 +75,7 @@
                 var rowData = [];
                 var chan;
                 for (chan = 0; chan < modTypeData.channels; chan++) {
-                    var note = {};
+                    var note = { };
                     var chanOfs = ofs + (row * 4 * modTypeData.channels) + chan * 4;
                     var b1 = data.charCodeAt(chanOfs);
                     var b2 = data.charCodeAt(chanOfs + 1);
@@ -88,9 +87,6 @@
                     note.effect = b3 & 0x0f;
                     note.parameter = b4;
                     note.volume=-1;
-                    if (note.effect !== 0 && note.parameter !== 0) {
-                        allEffects.push({effect: note.effect.toString(16), param: note.parameter.toString(16)});
-                    }
                     rowData.push(note);
                 }
                 pattern.push(rowData);

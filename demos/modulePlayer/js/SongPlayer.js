@@ -127,6 +127,9 @@
          * SONG PLAYER ...
          */
 
+        var bufferChannels = extraChannels || 2;
+        this.mixer = new jssynth.Mixer({numChannels: (this.song.channels + bufferChannels), volume: this.playerState.globalVolume});
+
         this.channelState = [];
         for (var i = 0; i < (song.channels + extraChannels); i++) {
             this.channelState[i] = {
@@ -167,11 +170,9 @@
                     }
                 }
             };
+            this.mixer.setPanPosition(i, this.channelState[i].panPos);
         }
 
-        var bufferChannels = extraChannels || 2;
-
-        this.mixer = new jssynth.Mixer({numChannels: (this.song.channels + bufferChannels), volume: this.playerState.globalVolume});
         this.mixer.setPreMixCallback(this.preSampleMix, this);
 
     }
@@ -310,6 +311,14 @@
             var chanState = this.channelState[chan];
             var effectParameter = chanState.effectParameter;
             var effectHandler = chanState.effect;
+            var volumeEffectHandler, volumeEffectParameter;
+            if (row && row[chan] && row[chan].volumeEffect) {
+                volumeEffectHandler = this.effectMap[row[chan].volumeEffect].effect;
+                volumeEffectParameter = row[chan].volumeEffectParameter;
+            }
+            if (volumeEffectHandler) {
+                effectHandler.tick(this.mixer, chan, volumeEffectParameter, this.playerState, chanState, null, null, this.song);
+            }
             if (effectHandler) {
                 effectHandler.tick(this.mixer, chan, effectParameter, this.playerState, chanState, null, null, this.song);
             }
@@ -333,6 +342,11 @@
         var sampleNumber = note.sampleNumber - 1;
         parms.effectParameter = note.parameter;
         var effectHandler = this.effectMap[note.effect].effect;
+        var volumeEffectHandler, volumeEffectParameter;
+        if (note.volumeEffect) {
+            volumeEffectHandler = this.effectMap[note.volumeEffect].effect;
+            volumeEffectParameter = note.volumeEffectParameter;
+        }
         if (!effectHandler && this.loggingEnabled) {
             console.log("no effect handler for effect "+note.effect.toString(16)+"/"+note.parameter.toString(16));
         }
@@ -369,6 +383,9 @@
         }
         if (note.note === 254) {  // 254 means note off
             this.mixer.cut(chan);
+        }
+        if (volumeEffectHandler) {
+            volumeEffectHandler.div(this.mixer, chan, volumeEffectParameter, this.playerState, parms, period, note, song);
         }
         if (effectHandler) {
             effectHandler.div(this.mixer, chan, parms.effectParameter, this.playerState, parms, period, note, song);

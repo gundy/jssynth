@@ -2,7 +2,7 @@
     <head>
         <link href='http://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'>
         <link href="css/app.css" rel="stylesheet">
-        <title>Jsynth Demo</title>
+        <title>JSSynth Demo</title>
         <script src="./js/thirdParty/jquery-1.9.1.min.js" type="text/javascript"></script>
         <script src="../../js/JSSynth.js" type="text/javascript"></script>
         <script src="../../js/JSWebAudioOutput.js" type="text/javascript"></script>
@@ -10,10 +10,11 @@
         <script src="./js/EffectHandlers.js" type="text/javascript"></script>
         <script src="./js/MODLoader.js" type="text/javascript"></script>
         <script src="./js/S3MLoader.js" type="text/javascript"></script>
-        <script src="./s3ms/lavender.s3m.js" type="text/javascript"></script>
+        <script src="./js/XMLoader.js" type="text/javascript"></script>
+        <script src="./mods/ode2ptk.mod.js" type="text/javascript"></script>
+        <!--<script src="./s3ms/lavender.s3m.js" type="text/javascript"></script>-->
     </head>
-    <title>Pure javascript / Web Audio MOD player</title>
-<body>
+    <body>
     <div class="titlebar">
         <span>JSSynth demo: JavaScript+HTML5 MOD/S3M player</span>
     </div>
@@ -52,7 +53,7 @@ var createPatternView = function(song, patternNumber) {
     var patternTable = $('<table></table>').addClass('scrollable song-pattern hidden').addClass('pattern-'+patternNumber);
     var patternTableBody = $('<tbody></tbody>');
 
-    for (var row = 0; row < 64; row++) {
+    for (var row = 0; row < pattern.length; row++) {
         var rowHtml = $('<tr></tr>').addClass('pattern-row row-num-'+row);
         if (row % 2 == 1) {
             rowHtml.addClass('alternate-row');
@@ -81,7 +82,11 @@ var createPatternView = function(song, patternNumber) {
             if (note.parameter === 0x00 && note.effect === 0x00) {
                 text = text + "- ";
             } else {
-                text = text + song.effectMap[note.effect].code + " ";
+                if (song.effectMap[note.effect]) {
+                    text = text + song.effectMap[note.effect].code + " ";
+                } else {
+                    text = text + "X" + ("0"+note.effect.toString(16)).slice(-2) + " ";
+                }
             }
 
             if (note.parameter === 0x00 && note.effect === 0x00) {
@@ -101,9 +106,10 @@ var createPatternView = function(song, patternNumber) {
 }
 
 window.onload = function(){
-//        song = jssynth.MOD.readMODfile(module);
+        song = jssynth.MOD.readMODfile(module);
+//        song = jssynth.XM.readXMfile(module);
 
-    song = jssynth.S3M.readS3Mfile(module);
+//    song = jssynth.S3M.readS3Mfile(module);
     player = new jssynth.MOD.Player(song, 4); /* 4 extra channels reserved for FX/game noises etc */
     audioOut = new jssynth.WebAudioOutput(player.getMixer(), 4096);  /* 4096 = buffer size */
 

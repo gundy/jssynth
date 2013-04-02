@@ -82,7 +82,8 @@
         var i;
         for (i = 0; i < 32; i++) {
             if (masterVolume & 0x80) {
-                defaultPanPos[i] = 0.5;
+                console.log("Default pan pos = mono");
+                defaultPanPos[i] = 0;
             } else {
                 if (i%16 <= 7) {
                     defaultPanPos[i] = -0.8;
@@ -161,8 +162,8 @@
                         note.volume = readByte(ofs++);
                     }
                     if (key & 0x80) {
-                        note.effect = readByte(ofs++);
-                        note.parameter = readByte(ofs++);
+                        note.effect = (readByte(ofs++));
+                        note.parameter = (readByte(ofs++));
                     }
                     rowData[channelMap[chan]]=note;
                     key = readByte(ofs++);
