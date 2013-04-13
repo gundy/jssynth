@@ -185,7 +185,7 @@
 
                 var flags = readByte(ofs+0x1f);
                 var c2speed = readWord(ofs+0x20) + (readWord(ofs+0x22)*65536);
-                samples[i] = new jssynth.Sample(data, {
+                var samp =  new jssynth.Sample(data, {
                     name: data.substring(ofs+1, ofs+12),
                     bits: (flags & 0x04) == 0x00 ? 8 : 16,
                     channels: (flags & 0x02) == 0x00 ? 1 : 2,
@@ -193,25 +193,26 @@
                     pitchOfs: c2speed / 8363,
                     sampleLength: readWord(ofs + 0x10) + (readWord(ofs+0x12) * 65536),
                     volume: readByte(ofs+0x1c),
-                    isRepeating: (flags & 0x01) !== 0x00,
+                    repeatType: (flags & 0x01) !== 0x00 ? 'REP_NORMAL' : 'NON_REPEATING',
                     repeatStart: readWord(ofs+0x14) + (readWord(ofs+0x16) * 65536),
                     repeatEnd: readWord(ofs+0x18) + (readWord(ofs+0x1a) * 65536)
                 }, (readByte(ofs+0x0d) * 65536 + readWord(ofs+0x0e)) * 16);
+
+                samples[i] = new jssynth.Instrument({name: "S3M instrument", numSamples: 1}, [samp]);
+
             } else {
-                samples[i] = {
+                samples[i] = new jssynth.Instrument({name: "Empty instrument", numSamples: 0}, [{
                     name: "--",
-                    length: 0,
+                    sampleLength: 0,
                     repeatStart: 0,
                     repeatEnd: 0,
                     volume: 0,
-                    flags: {
-                        isRepeating: false,
-                        isStereo: false,
-                        is16bit: false
-                    },
+                    repeatType: 'NON_REPEATING',
+                    bits: 8,
+                    channels: 1,
                     pitchOfs: 1,
                     samples: []
-                }
+                }]);
             }
         }
         song.instruments = samples;

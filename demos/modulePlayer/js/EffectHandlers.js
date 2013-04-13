@@ -422,10 +422,20 @@
         }),
         MOD_PT_DELAY_NOTE: jssynth.merge(TEMPLATE_EFFECT, {
             div:function(mixer, chan, param, playerState, channelState, period, note, song) {
+                var noteToPlay = note.note;
+                if (noteToPlay < 0) {
+                    noteToPlay = jssynth.MOD.MOD_PERIOD_TABLE.getNote(parms.period);
+                }
+                var instrument = note.sampleNumber > 0 ? song.instruments[note.sampleNumber - 1] : null;
+                var sample;
+                if (instrument && noteToPlay > 0) {
+                    var sampleNum = instrument.metadata.noteToSampleMap[noteToPlay];
+                    sample = instrument.samples[sampleNum];
+                }
                 channelState.effectState.noteDelay = {
                     delay: param,
                     note: note,
-                    sample: song.instruments[note.sampleNumber - 1]
+                    sample: sample
                 }
             },
             tick:function(mixer, chan, param, playerState, channelState) {
@@ -813,6 +823,36 @@
         0x0d: { code: 'd', effect: jssynth.MOD.EFFECTS.MOD_PATTERN_BREAK },
         0x0e: { code: 'e', effect: jssynth.MOD.EFFECTS.MOD_PROTRACKER },
         0x0f: { code: 'f', effect: jssynth.MOD.EFFECTS.MOD_SET_SPEED },
+        /*
+         G      Set global volume
+         H  (*) Global volume slide
+         K      Key off
+         L      Set envelope position
+         P  (*) Panning slide
+         R  (*) Multi retrig note
+         T      Tremor
+         X1 (*) Extra fine porta up
+         X2 (*) Extra fine porta down
+
+         */
+
+        0x10: { code: 'G', effect: jssynth.MOD.EFFECTS.S3M_SET_GLOBAL_VOLUME },
+        0x11: { code: 'H', effect: TEMPLATE_EFFECT },  // TODO GLOBAL VOLUME SLIDE
+        0x12: { code: 'I', effect: TEMPLATE_EFFECT },  // NOTHING
+        0x13: { code: 'J', effect: TEMPLATE_EFFECT },  // NOTHING
+        0x14: { code: 'K', effect: TEMPLATE_EFFECT },  // TODO KEY OFF
+        0x15: { code: 'L', effect: TEMPLATE_EFFECT },  // TODO SET ENVELOPE POSITION
+        0x16: { code: 'M', effect: TEMPLATE_EFFECT },  // NOTHING
+        0x17: { code: 'N', effect: TEMPLATE_EFFECT },  // NOTHING
+        0x18: { code: 'O', effect: TEMPLATE_EFFECT },  // NOTHING
+        0x19: { code: 'P', effect: TEMPLATE_EFFECT },  // TODO PANNING SLIDE
+        0x1a: { code: 'R', effect: TEMPLATE_EFFECT },  // TODO MULTI RETRIG NOTE
+        0x1b: { code: 'S', effect: TEMPLATE_EFFECT },  // NOTHING
+        0x1c: { code: 'T', effect: TEMPLATE_EFFECT },  // TODO TREMOR
+        0x1d: { code: 'U', effect: TEMPLATE_EFFECT },  // NOTHING
+        0x1e: { code: 'V', effect: TEMPLATE_EFFECT },  // NOTHING
+        0x1f: { code: 'W', effect: TEMPLATE_EFFECT },  // NOTHING
+        0x20: { code: 'X', effect: TEMPLATE_EFFECT },  // NOTHING
 
         /* protracker commands */
         0xe0: jssynth.MOD.EFFECTS.MOD_PT_SET_FILTER,

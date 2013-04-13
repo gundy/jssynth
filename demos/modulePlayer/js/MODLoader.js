@@ -41,7 +41,6 @@
         }
         var modType = data.substring(1080, 1084);
         var modTypeData = jssynth.MOD.MODTypes[modType] || { key: 'NOIS', channels: 4, instruments: 15 };
-        var modSamples = [];
         var song = {};
 
         song.name = data.substring(0, 20);
@@ -96,27 +95,31 @@
 
         var sampleOfs = patternOfs + (64 * 4 * modTypeData.channels * (maxPatternNum + 1));
 
+        var modInstruments = [];
+
         for (var i = 0; i < modTypeData.instruments; i++) {
             var insOffset = 20 + 30 * i;
 
             var sampleLength = readWord(insOffset + 22) * 2;
             var repeatLength = readWord(insOffset + 28) * 2;
+            var sampleName = data.substring(insOffset, insOffset + 22);
             var sample = new jssynth.Sample(data, {
-                name: data.substring(insOffset, insOffset + 22),
+                name: sampleName,
                 bits: 8,
                 channels: 1,
                 signed: true,
                 pitchOfs: Math.pow(EIGHTH_SEMITONE_MULTIPLIER, jssynth.MOD.MOD_FINETUNE_TABLE[data.charCodeAt(insOffset + 24)]),
                 sampleLength: sampleLength,
                 volume: data.charCodeAt(insOffset + 25),
-                isRepeating: repeatLength > 2,
+                repeatType: repeatLength > 2 ? 'REP_NORMAL' : 'NON_REPEATING',
                 repeatStart: readWord(insOffset + 26) * 2,
                 repeatEnd: readWord(insOffset + 26) * 2 + repeatLength
             }, sampleOfs);
             sampleOfs += sampleLength;
-            modSamples[i] = sample;
+
+            modInstruments[i] = new jssynth.Instrument({name: sampleName, numSamples: 1}, [sample]);
         }
-        song.instruments = modSamples;
+        song.instruments = modInstruments;
 
         return song;
     }

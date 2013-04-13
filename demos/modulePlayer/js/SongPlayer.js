@@ -69,7 +69,11 @@
             return jssynth.MOD.MOD_PERIOD_TABLE.PERIODS[note] || -1;
         },
         getName : function(note) {
-            return jssynth.MOD.MOD_PERIOD_TABLE.NOTE_NAMES[note] || "---";
+            if (note == 254) {
+                return "oFF";
+            } else {
+                return jssynth.MOD.MOD_PERIOD_TABLE.NOTE_NAMES[note] || "---";
+            }
         }
 
     }
@@ -286,8 +290,10 @@
         var state = this.playerState;
         var song = this.song;
 
+        var numRows = song.patterns[song.orders[state.pos]].length;
         state.row = state.row + 1;
-        if (state.row > 63) {
+
+        if (state.row >= numRows) {
             var chan;
             for (chan = 0; chan < song.channels; chan++) {
                 this.channelState[chan].effectState.patternLoop.row = 0;
@@ -354,16 +360,26 @@
 
         if (sampleNumber >= 0 && this.song.instruments[sampleNumber]) {
 
-            var sample = this.song.instruments[sampleNumber];
+            var instrument = this.song.instruments[sampleNumber];
 
-            // set sample (& volume)
-            this.mixer.setSample(chan, sample);
-
-            parms.pitchOfs = sample.metadata.pitchOfs || 1;
-            if ((effectHandler && effectHandler.allowVolumeChange === true) || !effectHandler) {
-                parms.volume = sample.metadata.volume;
-                parms.lastVolume = sample.metadata.volume;
+            var noteToPlay = note.note;
+            if (noteToPlay < 0) {
+                noteToPlay = jssynth.MOD.MOD_PERIOD_TABLE.getNote(parms.period);
             }
+            if (noteToPlay > 0) {
+                var sampleNum = instrument.metadata.noteToSampleMap[noteToPlay];
+                var sample = instrument.samples[sampleNum];
+
+                // set sample (& volume)
+                this.mixer.setSample(chan, sample);
+
+                parms.pitchOfs = sample.metadata.pitchOfs || 1;
+                if ((effectHandler && effectHandler.allowVolumeChange === true) || !effectHandler) {
+                    parms.volume = sample.metadata.volume;
+                    parms.lastVolume = sample.metadata.volume;
+                }
+            }
+
         }
         if (period > 0) {
             if ((effectHandler && effectHandler.allowPeriodChange === true) || !effectHandler) {

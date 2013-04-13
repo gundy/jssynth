@@ -83,21 +83,58 @@
         volume: 64
     }
 
+
+
     var DEFAULT_SAMPLE_METADATA = {
         name: "",
         bits: 24,
         channels: 2,
         little_endian: true,
+        delta_encoding: false,
         signed: true,
         sampleRate: 44100,
         representedFreq: 440,  /* the frequency that this sample will produce if played at it's sample rate */
         pitchOfs: 1,
-        isRepeating: false,
+        repeatType: 'NON_REPEATING',
         volume: 64,
         repeatStart: 0,
         repeatEnd: 0,
         sampleLength: 0
     }
+
+    var DEFAULT_INSTRUMENT_METADATA = {
+        noteToSampleMap: [
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+        ],
+
+        volumeType: 0,  // bit 0: On; 1: Sustain; 2: Loop
+        volumeEnvelope: [],
+        numVolumePoints: 0,
+        volumeSustainPoint: 0,
+        volumeLoopStartPoint: 0,
+        volumeLoopEndPoint: 0,
+
+        panningType: 0, // bit 0: On; 1: Sustain; 2: Loop
+        panningEnvelope: [],
+        numPanningPoints: 0,
+        panningSustainPoint: 0,
+        panningLoopStartPoint: 0,
+        panningLoopEndPoint: 0,
+
+        vibratoType: 0,  // ???
+        vibratoSweep: 0,
+        vibratoDepth: 0,
+        vibratoRate: 0,
+
+        volumeFadeout: 0
+    };
 
     /*
      * Convert a set of raw (byte-wise) samples into arrays of doubles
@@ -105,9 +142,11 @@
     var convertSamplesBytesToDoubles = function(samples, metadata, offset) {
         var startOfs = offset || 0;
         var channelData = [];
+        var rawData = [];
         var meta = jssynth.merge(DEFAULT_SAMPLE_METADATA, metadata);
         for (var chan = 0; chan < meta.channels; chan++) {
             channelData[chan] = [];
+            rawData[chan] = [];
         }
         if (meta.bits % 8 !== 0 || meta.bits > 24) {
             console.log("can only read 8, 16 or 24-bit samples")
@@ -135,25 +174,36 @@
                     /* samp XOR 0x8000 & 0xffff converts from signed to unsigned */
                     data = (data ^ scale) & mask;
                 }
-                data = (data - scale) / scale;
-                channelData[chan][i] = data;
+                if (meta.delta_encoding) {
+                    var previousVal = ((i == 0) ? 0x00 : rawData[chan][i-1]);
+                    rawData[chan][i] = (previousVal + ((data^scale)&mask)) & 0xff;
+                    channelData[chan][i] = (((rawData[chan][i] ^ scale) & mask) - scale) / scale;
+                } else {
+                    data = (data - scale) / scale;
+                    channelData[chan][i] = data;
+                }
             }
         }
         return channelData;
     }
 
-    jssynth.Sample = function(samples, metadata, offset) {
-        if (typeof samples === 'function') {
-            this.data = samples();
+    jssynth.Sample = function(sampleData, metadata, offset) {
+        if (typeof sampleData === 'function') {
+            this.data = sampleData();
         } else {
-            this.data = convertSamplesBytesToDoubles(samples, metadata, offset);
+            this.data = convertSamplesBytesToDoubles(sampleData, metadata, offset);
         }
         this.metadata = jssynth.merge(DEFAULT_SAMPLE_METADATA, metadata);
-        if (this.metadata.isRepeating) {
+        if (this.metadata.repeatType !== 'NON_REPEATING') {
             for (var c = 0; c < this.data.length; c++) {
                 this.data[c][metadata.repeatEnd+1] = this.data[c][metadata.repeatEnd];
             }
         }
+    }
+
+    jssynth.Instrument = function(metadata, samples) {
+        this.metadata = jssynth.merge(DEFAULT_INSTRUMENT_METADATA, metadata);
+        this.samples = samples;
     }
 
     jssynth.Mixer = function(globalState, defaultChannelState) {
@@ -225,7 +275,7 @@
         var sample = this.channelState[channel].sample;
         if (sample) {
             var length = sample.metadata.sampleLength;
-            if (sample.metadata.isRepeating) {
+            if (sample.metadata.repeatType !== 'NON_REPEATING') {
                 var repStart = sample.metadata.repeatStart;
                 var repEnd = sample.metadata.repeatEnd;
                 var repLen = repEnd - repStart;
@@ -308,15 +358,15 @@
         }
     }
 
-    var STEP_FUNCS = {  /* step through the sample, key is "isRepeating" flag */
-        true: function(samplePos, samplePosStep, repEnd, repLen) {
+    var STEP_FUNCS = {  /* step through the sample, key is "repeatType" flag */
+        'REP_NORMAL': function(samplePos, samplePosStep, repEnd, repLen) {
             samplePos += samplePosStep;
             while (samplePos >= repEnd) {
                 samplePos -= repLen;
             }
             return samplePos;
         },
-        false: function(samplePos, samplePosStep) {
+        'NON_REPEATING': function(samplePos, samplePosStep) {
             return samplePos + samplePosStep;
         }
     }
@@ -351,7 +401,7 @@
                 var repStart = sample.metadata.repeatStart;
                 var repEnd = sample.metadata.repeatEnd;
                 var repLen = repEnd - repStart;
-                var stepFunc = STEP_FUNCS[sample.metadata.isRepeating];
+                var stepFunc = STEP_FUNCS[sample.metadata.repeatType];
                 for (i = 0; (i < numSamples) && (samplePos < sampleLength); i++) {
                     output[0][i] += (leftSampleData[Math.floor(samplePos)] * leftScale);
                     output[1][i] += (rightSampleData[Math.floor(samplePos)] * rightScale);

@@ -79,7 +79,6 @@
         song.patterns = [];
         var ofs = patternOfs;
         for (var i = 0; i < numPatterns; i++) {
-            var pattern = [];
 
             var patternHeaderLength = readDWord(ofs);
             var packingType = readByte(ofs+4);
@@ -89,9 +88,12 @@
             var numRows = readWord(ofs+5);
             var packedPatternSize = readWord(ofs+7);
             var packedPatternOfs = ofs+patternHeaderLength;
+            var startPatternOfs = packedPatternOfs;
 
             var row = 0;
-            while (row < numRows) {
+            var pattern = [];
+            if (packedPatternSize > 0) {
+                while (row < numRows) {
                 var rowData = [];
                 var chan;
                 for (chan = 0 ; chan < numChannels; chan++) {
@@ -104,14 +106,15 @@
                     }
                     var key = readByte(packedPatternOfs++);
                     if ((key & 0x80) == 0) {
-                        note.note = key;
+                        note.note = (key == 97 ? 254 : key);
                         note.sampleNumber = readByte(packedPatternOfs++);
                         note.volume = readByte(packedPatternOfs++);
                         note.effect = readByte(packedPatternOfs++);
                         note.parameter = readByte(packedPatternOfs++);
                     } else {
                         if (key & 0x01) {
-                            note.note = readByte(packedPatternOfs++);
+                            var noteNum = readByte(packedPatternOfs++);
+                            note.note = (noteNum == 97 ? 254 : noteNum);
                         }
                         if (key & 0x02) {
                             note.sampleNumber = readByte(packedPatternOfs++);
@@ -137,27 +140,36 @@
                 pattern[row] = rowData;
                 row++;
             }
+            }
             song.patterns[i]=pattern;
+            if ((packedPatternOfs - startPatternOfs) !== packedPatternSize) {
+                console.log("Expected to read "+packedPatternSize+" bytes for pattern "+i+", but got "+(packedPatternOfs - startPatternOfs));
+            }
             ofs = ofs + patternHeaderLength + packedPatternSize;
         }
 
-        var samples = [];
+        var instruments = [];
         for (i = 0; i < numInstruments; i++) {
-            var instrument = {};
+            var samples = [];
             var instrumentSize = readDWord(ofs);
-            var instrumentName = data.substring(ofs+4, ofs+26);
             var instrumentType = readByte(ofs+26);
+            var instrumentName = data.substring(ofs+4, ofs+26);
             if (instrumentType !== 0x00) {
-                console.log("Instrument #"+i+", type was "+instrumentType+", expected 0");
+                console.log("Instrument #"+i+", type    was "+instrumentType+", expected 0");
             }
             var numSamples = readWord(ofs+27);
             console.log("Would be reading instrument #"+i+", name = "+instrumentName+", numSamples = "+numSamples);
             var instrumentMetaData = {
+                name: instrumentName,
+                type: instrumentType,
+                numSamples: numSamples,
                 noteToSampleMap: [],
                 volumeEnvelope: [],
                 panningEnvelope: []
             };
+            var sampleHeaderSize = 0;
             if (numSamples > 0) {
+                sampleHeaderSize = readDWord(ofs+29);
                 for (var n = 0; n < 96; n++) {
                     instrumentMetaData.noteToSampleMap[n] = readByte(ofs+33+n);
                 }
@@ -184,42 +196,67 @@
             }
 
             var sampleOfs = ofs + instrumentSize;
-            var samples = [];
+            var sampleMeta = [];
             for (var s = 0; s < numSamples ; s++) {
-                var sampleLength = readDWord(sampleOfs+s);
-                var sampleLoopStart = readDWord(sampleOfs+s+4);
-                var sampleLoopEnd = readDWord(sampleOfs+s+8);
-                var sampleVolume = readByte(sampleOfs+s+12);
-                var sampleFinetune = readByte(sampleOfs+s+13);
-                var sampleType = readByte(sampleOfs+s+14);
+                var sampleLength = readDWord(sampleOfs);
+                var sampleLoopStart = readDWord(sampleOfs+4);
+                var sampleLoopLength = readDWord(sampleOfs+8);
+                var sampleLoopEnd = sampleLoopStart+sampleLoopLength;
+                var sampleVolume = readByte(sampleOfs+12);
+                var sampleFinetune = readByte(sampleOfs+13);
+                var sampleType = readByte(sampleOfs+14);
+                var adpcmFlag = readByte(sampleOfs+17);
+                if (adpcmFlag == 0xad) {
+                    console.log("ADPCM sample");
+                }
                 if (sampleType & 0x10) {
                     console.log("**** 16-bit sample ****");
                 }
-                var samplePanPos = readByte(sampleOfs+s+15);
-                var sampleRelativeNote = readByte(sampleOfs+s+16);
-                var sampleName = data.substring(sampleOfs+s+18, sampleOfs+s+40);
-                console.log(" - instrument sample #"+s+", name="+sampleName+", length="+sampleLength);
-                sampleOfs += 40;
-                samples.push({
+                var samplePanPos = readByte(sampleOfs+15);
+                var sampleRelativeNote = readByte(sampleOfs+16);
+                var sampleName = data.substring(sampleOfs+18, sampleOfs+40);
+                sampleOfs += sampleHeaderSize;
+                var noteOfs = ((sampleRelativeNote+0x80)&0xff)-0x80;
+                var fineTune = ((sampleFinetune+0x80)&0xff)-0x80;
+                console.log("noteOfs = "+noteOfs);
+                console.log("finetune = "+fineTune);
+                var repeatType = sampleType & 0x03;
+                sampleMeta[s] = {
                     name: sampleName,
-                    length: sampleLength,
+                    bits: (sampleType & 0x10) ? 16 : 8,
+                    channels: 1,
+                    signed: true,
+                    adpcm: adpcmFlag == 0xad,
+                    delta_encoding: true,
+                    repeatType:  (repeatType === 1 || repeatType === 2) && sampleLoopLength !== 0 ? 'REP_NORMAL' : 'NON_REPEATING',  // 0x02 should mean ping-pong
+                    sampleLength: sampleLength,
                     volume: sampleVolume,
-                    fineTune: sampleFinetune,
+                    pitchOfs: Math.pow(Math.pow(2, 1/12), noteOfs) * Math.pow(Math.pow(2, 1/(12*128)), fineTune),
                     type: sampleType,
-                    panPos: samplePanPos,
-                    loopStart: sampleLoopStart,
-                    loopEnd: sampleLoopEnd,
-                    relativeNote: sampleRelativeNote
-                });
-//                sampleOfs += sampleLength;
+                    panPos: (samplePanPos-128) / 128,
+                    repeatStart: sampleLoopStart,
+                    repeatEnd: sampleLoopEnd
+                };
+                console.log(" - instrument sample #"+s+", name="+sampleName+", length="+sampleLength+", meta=",sampleMeta[s]);
+
             }
+            var samples = [];
             for (var s = 0 ; s < numSamples; s++) {
                 // read sample data (differential storage)
-                sampleOfs += samples[s].length;
+                samples[s] = new jssynth.Sample(data, sampleMeta[s], sampleOfs);
+                var sampleLengthMultiplier = sampleMeta[s].bits / 8;
+                if (sampleMeta[s].adpcm) {
+                    sampleLengthMultiplier /= 2;
+                    sampleOfs += 16;  /* adpcm decode table */
+                }
+                sampleOfs += sampleMeta[s].sampleLength * sampleLengthMultiplier;
             }
+
+            instruments[i] = new jssynth.Instrument(instrumentMetaData, samples);
+
             ofs = sampleOfs;
         }
-        song.instruments = samples;
+        song.instruments = instruments;
 
         return song;
     }
