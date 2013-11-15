@@ -323,7 +323,7 @@
                 volumeEffectParameter = row[chan].volumeEffectParameter;
             }
             if (volumeEffectHandler) {
-                effectHandler.tick(this.mixer, chan, volumeEffectParameter, this.playerState, chanState, null, null, this.song);
+                volumeEffectHandler.tick(this.mixer, chan, volumeEffectParameter, this.playerState, chanState, null, null, this.song);
             }
             if (effectHandler) {
                 effectHandler.tick(this.mixer, chan, effectParameter, this.playerState, chanState, null, null, this.song);

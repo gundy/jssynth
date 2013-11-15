@@ -123,9 +123,32 @@
                             var vol = readByte(packedPatternOfs++);
                             if (vol >= 0x10 && vol <= 0x50) {
                                 note.volume = vol - 0x10;
-                            } else {
-                                // TODO unpack volume effects
-                                console.log("Volume effect not currently supported")
+                            } else if (vol >= 0x60 && vol <= 0x6f) {
+                                note.volumeEffect = 0x0a;
+                                note.volumeEffectParameter = vol - 0x60;
+                            } else if (vol >= 0x70 && vol <= 0x7f) {
+                                note.volumeEffect = 0x0a;
+                                note.volumeEffectParameter = (vol - 0x70) * 16;
+                            } else if (vol >= 0x80 && vol <= 0x8f) {
+                                note.volumeEffect = 0x0e;
+                                note.volumeEffectParameter = (vol - 0x80) + 0xb0;
+                            } else if (vol >= 0x90 && vol <= 0x9f) {
+                                note.volumeEffect = 0x0e;
+                                note.volumeEffectParameter = (vol - 0x90) + 0xa0;
+                            } else if (vol >= 0xa0 && vol <= 0xaf) {
+                                console.log("Set vibrato speed volume command not implemented");
+                            } else if (vol >= 0xb0 && vol <= 0xbf) {
+                                console.log("Set vibrato depth volume command not implemented");
+                            } else if (vol >= 0xc0 && vol <= 0xcf) {
+                                note.volumeEffect = 0x0e;
+                                note.volumeEffectParameter = 0x80 + (vol - 0xc0);
+                            } else if (vol >= 0xd0 && vol <= 0xdf) {
+                                console.log("Pan slide left volume effect not implemented");
+                            } else if (vol >= 0xe0 && vol <= 0xef) {
+                                console.log("Pan slide right volume effect not implemented");
+                            } else if (vol >= 0xf0 && vol <= 0xff) {
+                                note.volumeEffect = 0x03;
+                                note.volumeEffectParameter = vol - 0xf0;
                             }
                         }
                         if (key & 0x08) {

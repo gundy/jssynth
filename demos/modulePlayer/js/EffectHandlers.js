@@ -611,9 +611,18 @@
             }
         }),
         S3M_RETRIG_PLUS_VOLUME_SLIDE: jssynth.merge(TEMPLATE_EFFECT, {
+            div: function(mixer, chan, param, playerState, channelState, period) {
+                if (param & 0xf0 != 0x00) {
+                    channelState.effectState.lastS3MRetrigVolSldParam = (param & 0xf0) / 16;
+                }
+                if (param & 0x0f != 0x00) {
+                    channelState.effectState.lastS3MRetrigRetrigTickParam = (param & 0x0f);
+                }
+
+            },
             tick:function(mixer, chan, param, playerState, channelState) {
-                var retrigTicks = param & 0x0f;
-                var volSld = (param & 0xf0) / 16;
+                var retrigTicks = channelState.effectState.lastS3MRetrigRetrigTickParam || 0x00;
+                var volSld = channelState.effectState.lastS3MRetrigVolSldParam || 0x00;
                 if ((playerState.tick + 1) % retrigTicks == 0) {
                     mixer.setSamplePosition(chan, 0);
                     channelState.volume = S3M_RETRIG_TABLE[volSld](channelState.volume);
@@ -699,6 +708,40 @@
                 param = param + 8;
                 channelState.panPos.left = (15 -  param) / 15;
                 channelState.panPos.right = param / 15;
+            }
+        }),
+        XM_GLOBAL_VOLUME_SLIDE: jssynth.merge(TEMPLATE_EFFECT, {
+            div: function(mixer, chan, param, playerState, channelState, period) {
+                if (param == 0x00) {
+                    param = channelState.effectState.lastXMGlobalVolSlide || 0x00;
+                }
+                channelState.effectState.lastXMGlobalVolSlide = param;
+                var a = (param & 0xf0) / 16;
+                var b = param & 0x0f;
+                if (playerState.fastS3MVolumeSlides) {
+                    if (b === 0x00 && a !== 0x00) {
+                        playerState.globalVolume += a;
+                    } else if (a === 0x00 && b !== 0x00) {
+                        playerState.globalVolume -= b;
+                    }
+                }
+                if (b === 0x0f) {
+                    playerState.globalVolume += a;
+                } else if (a === 0x0f) {
+                    playerState.globalVolume -= b;
+                }
+                playerState.globalVolume = playerState.globalVolume < 0 ? 0 : playerState.globalVolume > 64 ? 64 : playerState.globalVolume;
+            },
+            tick: function(mixer, chan, param, playerState, channelState) {
+                var slideAmt = channelState.effectState.lastXMGlobalVolSlide;
+                var a = (slideAmt & 0xf0) / 16;
+                var b = (slideAmt & 0x0f);
+                if (b === 0x00 && a !== 0x00) {
+                    playerState.globalVolume += a;
+                } else if (a === 0x00 && b !== 0x00) {
+                    playerState.globalVolume -= b;
+                }
+                playerState.globalVolume = playerState.globalVolume < 0 ? 0 : playerState.globalVolume > 64 ? 64 : playerState.globalVolume;
             }
         })
 
@@ -837,7 +880,7 @@
          */
 
         0x10: { code: 'G', effect: jssynth.MOD.EFFECTS.S3M_SET_GLOBAL_VOLUME },
-        0x11: { code: 'H', effect: TEMPLATE_EFFECT },  // TODO GLOBAL VOLUME SLIDE
+        0x11: { code: 'H', effect: jssynth.MOD.EFFECTS.XM_GLOBAL_VOLUME_SLIDE },  // TODO GLOBAL VOLUME SLIDE
         0x12: { code: 'I', effect: TEMPLATE_EFFECT },  // NOTHING
         0x13: { code: 'J', effect: TEMPLATE_EFFECT },  // NOTHING
         0x14: { code: 'K', effect: TEMPLATE_EFFECT },  // TODO KEY OFF
@@ -846,9 +889,9 @@
         0x17: { code: 'N', effect: TEMPLATE_EFFECT },  // NOTHING
         0x18: { code: 'O', effect: TEMPLATE_EFFECT },  // NOTHING
         0x19: { code: 'P', effect: TEMPLATE_EFFECT },  // TODO PANNING SLIDE
-        0x1a: { code: 'R', effect: TEMPLATE_EFFECT },  // TODO MULTI RETRIG NOTE
+        0x1a: { code: 'R', effect: jssynth.MOD.EFFECTS.S3M_RETRIG_PLUS_VOLUME_SLIDE },  // TODO MULTI RETRIG NOTE
         0x1b: { code: 'S', effect: TEMPLATE_EFFECT },  // NOTHING
-        0x1c: { code: 'T', effect: TEMPLATE_EFFECT },  // TODO TREMOR
+        0x1c: { code: 'T', effect: jssynth.MOD.EFFECTS.S3M_TREMOR },  // TODO TREMOR
         0x1d: { code: 'U', effect: TEMPLATE_EFFECT },  // NOTHING
         0x1e: { code: 'V', effect: TEMPLATE_EFFECT },  // NOTHING
         0x1f: { code: 'W', effect: TEMPLATE_EFFECT },  // NOTHING
