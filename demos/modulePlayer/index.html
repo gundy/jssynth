@@ -105,12 +105,12 @@ var createPatternView = function(song, patternNumber) {
 }
 
 window.onload = function(){
-        song = jssynth.MOD.readMODfile(module);
-//        song = jssynth.XM.readXMfile(module);
+    song = jssynth.MOD.readMODfile(module);
 
-//    song = jssynth.S3M.readS3Mfile(module);
-    player = new jssynth.MOD.Player(song, 4); /* 4 extra channels reserved for FX/game noises etc */
-    audioOut = new jssynth.WebAudioOutput(player.getMixer(), 8192);  /* 4096 = buffer size */
+    mixer = new jssynth.Mixer({numChannels: 6 /* 4 for music, 2 for effects */ });
+    player = new jssynth.MOD.Player(this.mixer);
+    player.setSong(this.song);
+    audioOut = new jssynth.WebAudioOutput(this.mixer, 4096);  /* 4096/8192/.. = buffer size */
 
     for (var i = 0; i < song.patterns.length; i++) {
         $('.song-pattern-container').append(createPatternView(song, i));
