@@ -35,35 +35,27 @@
      */
     jssynth.WebAudioOutput = function(mixer, bufferSize) {
         var self = this;
-        if('webkitAudioContext' in window) {
 
+        if (window.hasOwnProperty('webkitAudioContext') && !window.hasOwnProperty('AudioContext')) {
+            window.AudioContext = window.webkitAudioContext;
+        }
 
-            this.context = new webkitAudioContext();
+        if(window.hasOwnProperty('AudioContext')) {
+            this.context = new AudioContext();
             this.mode = 'MODE_WEBKIT';
-            this.node = this.context.createJavaScriptNode(bufferSize || WA_BUF_SIZE, 0, WA_NUM_OUTPUT_CHANNELS);
+            this.node = this.context.createScriptProcessor(bufferSize || WA_BUF_SIZE, 0, WA_NUM_OUTPUT_CHANNELS);
+
             this.nextSamples = null;
             this.nextSamplesOffset = 0;
 
-            /**
-             * Start the audio output
-             */
-            jssynth.WebAudioOutput.prototype.start = function() {
-                this.node.connect(this.context.destination);
-            }
 
-            /**
-             * Stop/pause the audio output
-             */
-            jssynth.WebAudioOutput.prototype.stop = function() {
-                this.node.disconnect();
-            }
 
             var processSamples = function(event) {
                 var outputBuffer = event.outputBuffer;
                 var sampleRate = outputBuffer.sampleRate;
                 var bufferLength = outputBuffer.length;
                 var channelData = [ outputBuffer.getChannelData(0), outputBuffer.getChannelData(1) ];
-
+                var i = null;
                 var outputOfs = 0;
 
                 while (outputOfs < bufferLength) {
@@ -73,7 +65,7 @@
                     }
 
                     for (var chan = 0; chan < WA_NUM_OUTPUT_CHANNELS; chan++) {
-                        for (var i = 0; ((self.nextSamplesOffset+i) < self.nextSamples.bufferSize) && ((i + outputOfs) < bufferLength); i++) {
+                        for (i = 0; ((self.nextSamplesOffset+i) < self.nextSamples.bufferSize) && ((i + outputOfs) < bufferLength); i++) {
                             channelData[chan][outputOfs+i] = self.nextSamples.output[chan][self.nextSamplesOffset + i];
                         }
                     }
@@ -84,74 +76,27 @@
                         self.nextSamples = null;
                     }
                 }
-            }
+            };
 
-            this.node.onaudioprocess = processSamples;
+//            this.node.onaudioprocess = processSamples;
 
-        } else if ('Audio' in window) {
-            this.audio = new Audio();
-            this.audio.volume = 1;
-            this.mode = 'MODE_MOZILLA';
-            var sampleRate = 44100;
-
-            this.started = false;
-
-            this.buffers = [];
-
-            /**
-             * Start the audio output
-             */
-            jssynth.WebAudioOutput.prototype.start = function() {
-                this.audio.mozSetup(2, sampleRate);
-                var getQueuedAudioLength = function() {
-                    var queuedAudioLength = 0;
-                    for (var i = 0; i < self.buffers.length; i++) {
-                        queuedAudioLength += self.buffers[i].length;
-                    }
-                    return queuedAudioLength;
-                }
-                var mixLoop = function() {
-                    while (getQueuedAudioLength() < bufferSize) {
-                        var nextSamples = mixer.mix(sampleRate);
-                        var mixedSamples = [];
-                        for (var i = 0 ; i < nextSamples.bufferSize; i++) {
-                            mixedSamples[i*2] = nextSamples.output[0][i];
-                            mixedSamples[i*2+1] = nextSamples.output[1][i];
-                        }
-                        self.buffers.push(mixedSamples);
-                    }
-                    var buffer = self.buffers.shift();
-                    var written = self.audio.mozWriteAudio(buffer);
-                    while (written == buffer.length && self.buffers.length > 0) {
-                        buffer = self.buffers.shift();
-                        written = self.audio.mozWriteAudio(buffer);
-                    }
-                    if (buffer.length !== written) {
-                        self.buffers.unshift(buffer.slice(written));
-                    }
-
-                    self.timeout = setTimeout(mixLoop, 20);
-                };
-                mixLoop();
-            }
-
-            /**
-             * Stop/pause the audio output
-             */
-            jssynth.WebAudioOutput.prototype.stop = function() {
-                if (this.timeout) {
-                    clearTimeout(this.timeout);
-                }
-                this.timeout = null;
-            }
-
-
-        } else {
-            throw "Unable to initialise web audio context";
         }
 
+        /**
+         * Start the audio output
+         */
+        jssynth.WebAudioOutput.prototype.start = function() {
+            self.node.connect(self.context.destination);
+            this.node.onaudioprocess = processSamples;
+        };
+
+        /**
+         * Stop/pause the audio output
+         */
+        jssynth.WebAudioOutput.prototype.stop = function() {
+            self.node.disconnect();
+            this.node.onaudioprocess = undefined;
+        };
     }
-
-
 
 })();
