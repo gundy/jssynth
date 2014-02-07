@@ -76,7 +76,7 @@
             }
         }
 
-    }
+    };
 
     var Amiga_Lowpass_Filter_3300_12dB_per_octave = function() {
         var NZEROS = 2;
@@ -92,20 +92,35 @@
             yv[2] = (xv[0] + xv[2]) + 2 * xv[1]
                 + ( -0.5147540757 * yv[0] ) + ( 1.3503898310 * yv[1]);
             return yv[2];
-        }
-    }
+        };
+    };
 
     var AMIGA_FILTERS = [ new Amiga_Lowpass_Filter_3300_12dB_per_octave(), new Amiga_Lowpass_Filter_3300_12dB_per_octave() ];
 
-    jssynth.MOD.Player = function(song, extraChannels) {
+    jssynth.MOD.Player = function(mixer) {
 
+        this.playing = true;
         this.loggingEnabled = false;
-        this.song = song;
+        this.song = null;
 
         this.stateCallback = null;
 
-        this.effectMap = song.effectMap || jssynth.MOD.MOD_EFFECT_MAP;
 
+
+        /*
+         * SONG PLAYER ...
+         */
+
+        this.mixer = mixer;
+
+
+        this.mixer.setPreMixCallback(this.preSampleMix, this);
+
+    };
+
+    jssynth.MOD.Player.prototype.setSong = function(song) {
+        this.song = song;
+        this.effectMap = song.effectMap || jssynth.MOD.MOD_EFFECT_MAP;
         this.playerState = {
             freq: song.defaultFreq || FREQ_PAL,
 
@@ -126,16 +141,8 @@
         };
 
         var defaultPanPos = song.defaultPanPos || [ -0.8, 0.8, 0.8, -0.8, -0.8, 0.8, 0.8, -0.8,-0.8, 0.8, 0.8, -0.8,-0.8, 0.8, 0.8, -0.8];
-
-        /*
-         * SONG PLAYER ...
-         */
-
-        var bufferChannels = extraChannels || 2;
-        this.mixer = new jssynth.Mixer({numChannels: (this.song.channels + bufferChannels), volume: this.playerState.globalVolume});
-
         this.channelState = [];
-        for (var i = 0; i < (song.channels + extraChannels); i++) {
+        for (var i = 0; i < song.channels; i++) {
             this.channelState[i] = {
                 chan: i,
                 panPos: defaultPanPos[i],
@@ -177,15 +184,26 @@
             this.mixer.setPanPosition(i, this.channelState[i].panPos);
         }
 
-        this.mixer.setPreMixCallback(this.preSampleMix, this);
-
     }
 
-    jssynth.MOD.Player.prototype.getMixer = function() {
-        return this.mixer;
+    jssynth.MOD.Player.prototype.start = function() {
+        this.playing = true;
+    };
+
+    jssynth.MOD.Player.prototype.stop = function() {
+        // stop any further notes from being played
+        this.playing = false;
+
+        // and cut output from all song player related channels
+        for (var chan = 0; chan < this.song.channels; chan++) {
+            this.mixer.cut(chan);
+        }
     }
 
     jssynth.MOD.Player.prototype.preSampleMix = function(mixer, sampleRate) {
+        if (!this.playing) {
+            return;
+        }
         var state = this.playerState;
         var song = this.song;
         if (state.patternDelay > 0) {
@@ -238,7 +256,7 @@
         }
         this.mixer.setGlobalVolume(state.globalVolume);
         this.mixer.setSecondsPerMix(1 / (state.bpm * 2 / 5));
-    }
+    };
 
     /**
      * Jump to the next position in the song
@@ -247,7 +265,7 @@
         this.advancePos();
         this.playerState.row = 0;
         this.playerState.tick = 0;
-    }
+    };
 
     /**
      * Jump to the previous position in the song
@@ -256,7 +274,7 @@
         this.decrementPos();
         this.playerState.row = 0;
         this.playerState.tick = 0;
-    }
+    };
 
     jssynth.MOD.Player.prototype.advancePos = function() {
         var state = this.playerState;
@@ -269,7 +287,7 @@
         if (state.pos >= song.songLength || song.orders[state.pos] == 255) {
             state.pos = 0;
         }
-    }
+    };
     jssynth.MOD.Player.prototype.decrementPos = function() {
         var state = this.playerState;
         var song = this.song;
@@ -284,7 +302,7 @@
                 state.pos -= 1;
             } while (song.orders[state.pos] == 254);
         }
-    }
+    };
 
     jssynth.MOD.Player.prototype.advanceRow = function() {
         var state = this.playerState;
@@ -301,7 +319,7 @@
             state.row = 0;
             this.advancePos();
         }
-    }
+    };
 
     jssynth.MOD.Player.prototype.advanceTick = function() {
         var state = this.playerState;
@@ -310,14 +328,14 @@
             state.tick = 0;
             this.advanceRow();
         }
-    }
+    };
 
     jssynth.MOD.Player.prototype.handleTick = function(row, tick, sampleRate) {
         for (var chan = 0; chan < this.song.channels; chan++) {
             var chanState = this.channelState[chan];
             var effectParameter = chanState.effectParameter;
             var effectHandler = chanState.effect;
-            var volumeEffectHandler, volumeEffectParameter;
+            var volumeEffectHandler = null, volumeEffectParameter = null;
             if (row && row[chan] && row[chan].volumeEffect) {
                 volumeEffectHandler = this.effectMap[row[chan].volumeEffect].effect;
                 volumeEffectParameter = row[chan].volumeEffectParameter;
@@ -337,7 +355,7 @@
             this.mixer.setFrequency(chan, freqHz);
             this.mixer.setVolume(chan, chanState.volume);
         }
-    }
+    };
 
     jssynth.MOD.Player.prototype.handleNote = function(chan, note, sampleRate) {
         var parms = this.channelState[chan];
@@ -348,7 +366,7 @@
         var sampleNumber = note.sampleNumber - 1;
         parms.effectParameter = note.parameter;
         var effectHandler = this.effectMap[note.effect].effect;
-        var volumeEffectHandler, volumeEffectParameter;
+        var volumeEffectHandler = null, volumeEffectParameter = null;
         if (note.volumeEffect) {
             volumeEffectHandler = this.effectMap[note.volumeEffect].effect;
             volumeEffectParameter = note.volumeEffectParameter;
@@ -401,10 +419,10 @@
             this.mixer.cut(chan);
         }
         if (volumeEffectHandler) {
-            volumeEffectHandler.div(this.mixer, chan, volumeEffectParameter, this.playerState, parms, period, note, song);
+            volumeEffectHandler.div(this.mixer, chan, volumeEffectParameter, this.playerState, parms, period, note, this.song);
         }
         if (effectHandler) {
-            effectHandler.div(this.mixer, chan, parms.effectParameter, this.playerState, parms, period, note, song);
+            effectHandler.div(this.mixer, chan, parms.effectParameter, this.playerState, parms, period, note, this.song);
         }
         var periodToPlay = parms.period;
         if (this.playerState.glissandoControl > 0) {
@@ -416,7 +434,7 @@
         var freqHz = this.playerState.freq.clock / (periodToPlay * 2) * parms.pitchOfs;
         this.mixer.setFrequency(chan, freqHz);
 
-    }
+    };
 
 
 
@@ -428,27 +446,27 @@
             var note = row[chan];
             this.handleNote(chan, note, sampleRate);
         }
-    }
+    };
 
 
     jssynth.MOD.Player.prototype.rowToText = function(row) {
-        var text = "" + ("000"+this.playerState.pos.toString(16)).slice(-3) + "/" + ("00"+this.playerState.row.toString(16)).slice(-2) + ": | ";
+        var chan, text = "" + ("000"+this.playerState.pos.toString(16)).slice(-3) + "/" + ("00"+this.playerState.row.toString(16)).slice(-2) + ": | ";
         for (chan = 0; chan < this.song.channels; chan++) {
             var note = row[chan];
             if (note.note > 0) {
                 text = text + jssynth.MOD.MOD_PERIOD_TABLE.getName(note.note) + " ";
             } else {
-                text = text + "--- "
+                text = text + "--- ";
             }
             if (note.sampleNumber > 0) {
                 text = text + ("0"+note.sampleNumber.toString(16)).slice(-2) + " ";
             } else {
-                text = text + "-- "
+                text = text + "-- ";
             }
             if (note.volume > 0) {
                 text = text + ("0"+note.volume.toString(16)).slice(-2) + " ";
             } else {
-                text = text + "-- "
+                text = text + "-- ";
             }
 
             text = text + this.effectMap[note.effect].code + " ";
@@ -456,11 +474,11 @@
             text = text + " | ";
         }
         return text;
-    }
+    };
 
     jssynth.MOD.Player.prototype.registerCallback = function(callback) {
         this.stateCallback = callback;
-    }
+    };
 
 
 })();

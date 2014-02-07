@@ -358,7 +358,7 @@
                     channelState.effectState.patternLoop.count--;
                     playerState.l_breakToRow = channelState.effectState.patternLoop.row;
                     playerState.l_jumpToPattern = playerState.pos;
-                }
+                };
                 if (param == 0x00) {
                     /* start loop */
                     channelState.effectState.patternLoop.row = playerState.row;
@@ -427,7 +427,7 @@
                     noteToPlay = jssynth.MOD.MOD_PERIOD_TABLE.getNote(parms.period);
                 }
                 var instrument = note.sampleNumber > 0 ? song.instruments[note.sampleNumber - 1] : null;
-                var sample;
+                var sample = null;
                 if (instrument && noteToPlay > 0) {
                     var sampleNum = instrument.metadata.noteToSampleMap[noteToPlay];
                     sample = instrument.samples[sampleNum];
@@ -436,7 +436,7 @@
                     delay: param,
                     note: note,
                     sample: sample
-                }
+                };
             },
             tick:function(mixer, chan, param, playerState, channelState) {
                 if (playerState.tick == (param - 1)) {
@@ -745,7 +745,7 @@
             }
         })
 
-    }
+    };
 
 
     jssynth.MOD.MOD_EFFECT_MAP = {
@@ -803,7 +803,7 @@
         0xed: jssynth.MOD.EFFECTS.MOD_PT_DELAY_NOTE,
         0xee: jssynth.MOD.EFFECTS.MOD_PT_DELAY_PATTERN,
         0xef: jssynth.MOD.EFFECTS.MOD_PT_INVERT_LOOP
-    }
+    };
 
     jssynth.S3M.S3M_EFFECT_MAP = {
         /* - */  0x00: { code: '-', effect: TEMPLATE_EFFECT },
@@ -846,7 +846,7 @@
         /* U */  0x15: { code: 'U', effect: jssynth.MOD.EFFECTS.S3M_FINE_VIBRATO },
         /* V */  0x16: { code: 'V', effect: jssynth.MOD.EFFECTS.S3M_SET_GLOBAL_VOLUME }
 
-    }
+    };
 
 
     jssynth.XM.XM_EFFECT_MAP = {
@@ -914,6 +914,6 @@
         0xed: jssynth.MOD.EFFECTS.MOD_PT_DELAY_NOTE,
         0xee: jssynth.MOD.EFFECTS.MOD_PT_DELAY_PATTERN,
         0xef: jssynth.MOD.EFFECTS.MOD_PT_INVERT_LOOP
-    }
+    };
 
 })();

@@ -37,8 +37,8 @@
 
     jssynth.MOD.readMODfile = function (data) {
         var readWord = function (ofs) {
-            return (data.charCodeAt(ofs) * 256 + data.charCodeAt(ofs + 1) )
-        }
+            return (data.charCodeAt(ofs) * 256 + data.charCodeAt(ofs + 1) );
+        };
         var modType = data.substring(1080, 1084);
         var modTypeData = jssynth.MOD.MODTypes[modType] || { key: 'NOIS', channels: 4, instruments: 15 };
         var song = {};
@@ -122,6 +122,6 @@
         song.instruments = modInstruments;
 
         return song;
-    }
+    };
 
 })();

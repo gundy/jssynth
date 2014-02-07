@@ -37,7 +37,7 @@
             obj[components[i]] = obj[components[i]] || {};
             obj = obj[components[i]];
         }
-    }
+    };
 
     jssynth.clone = function(obj) {
         var newObj = {};
@@ -48,7 +48,7 @@
             }
         }
         return newObj;
-    }
+    };
 
     jssynth.merge = function(existingObj, toMerge) {
         var newObj = jssynth.clone(existingObj);
@@ -61,7 +61,7 @@
             }
         }
         return newObj;
-    }
+    };
 
     jssynth.makeArrayOf = function (value, length) {
         var arr = [], i = length;
@@ -69,7 +69,7 @@
             arr[i] = value;
         }
         return arr;
-    }
+    };
 
     /*
      * Mixer definitions
@@ -80,8 +80,9 @@
         playbackFreqHz: 0,
         sample: undefined,
         samplePosition: -1,
-        volume: 64
-    }
+        volume: 64,
+        enabled: true
+    };
 
 
 
@@ -100,7 +101,7 @@
         repeatStart: 0,
         repeatEnd: 0,
         sampleLength: 0
-    }
+    };
 
     var DEFAULT_INSTRUMENT_METADATA = {
         noteToSampleMap: [
@@ -149,7 +150,7 @@
             rawData[chan] = [];
         }
         if (meta.bits % 8 !== 0 || meta.bits > 24) {
-            console.log("can only read 8, 16 or 24-bit samples")
+            console.log("can only read 8, 16 or 24-bit samples");
             return channelData;
         }
         var bytesPerSample = meta.bits / 8;
@@ -185,7 +186,7 @@
             }
         }
         return channelData;
-    }
+    };
 
     jssynth.Sample = function(sampleData, metadata, offset) {
         if (typeof sampleData === 'function') {
@@ -199,12 +200,12 @@
                 this.data[c][metadata.repeatEnd+1] = this.data[c][metadata.repeatEnd];
             }
         }
-    }
+    };
 
     jssynth.Instrument = function(metadata, samples) {
         this.metadata = jssynth.merge(DEFAULT_INSTRUMENT_METADATA, metadata);
         this.samples = samples;
-    }
+    };
 
     jssynth.Mixer = function(globalState, defaultChannelState) {
         this.globalState = jssynth.merge({
@@ -220,7 +221,7 @@
         for (var chan = 0; chan < this.globalState.numChannels; chan++) {
             this.channelState[chan] = jssynth.clone(dcs);
         }
-    }
+    };
 
     /**
      * Set the callback to be called prior to mixing the next batch of samples
@@ -229,11 +230,11 @@
     jssynth.Mixer.prototype.setPreMixCallback = function(f, c) {
         this.preMixCallback = f;
         this.preMixObject = c;
-    }
+    };
 
     jssynth.Mixer.prototype.setGlobalVolume = function(vol) {
         this.globalState.volume = vol;
-    }
+    };
 
     /**
      * Set the number of seconds worth of data to return from each mix() call
@@ -241,7 +242,7 @@
      */
     jssynth.Mixer.prototype.setSecondsPerMix = function(secondsPerMix) {
         this.globalState.secondsPerMix = secondsPerMix;
-    }
+    };
 
     /**
      * Trigger a sample to start playing on a given channel
@@ -254,8 +255,19 @@
         this.channelState[channel].playbackFreqHz = freqHz;
         this.channelState[channel].samplePosition = 0;
         this.channelState[channel].volume = sample.metadata.volume;
-    }
+    };
 
+    jssynth.Mixer.prototype.enableChannels = function(channels) {
+        for (var i = 0; i < channels.length ; i++) {
+            this.channelState[channels[i]].enabled = true;
+        }
+    };
+
+    jssynth.Mixer.prototype.disableChannels = function(channels) {
+        for (var i = 0; i < channels.length ; i++) {
+            this.channelState[channels[i]].enabled = false;
+        }
+    };
     /**
      * Set sample without updating any other params
      * @param channel channel to play the sample on
@@ -264,7 +276,8 @@
      */
     jssynth.Mixer.prototype.setSample = function(channel, sample) {
         this.channelState[channel].sample = sample;
-    }
+    };
+
 
     /**
      * Set the current position/offset of the sample playing on a given channel
@@ -289,7 +302,19 @@
                 this.channelState[channel].samplePosition = -1;
             }
         }
-    }
+    };
+
+    /**
+     * Add a phase offset to the sample playing on a given channel
+     * @param channel
+     * @param offset
+     */
+    jssynth.Mixer.prototype.addToSamplePosition = function(channel, offset) {
+        var sample = this.channelState[channel].sample;
+        if (sample && this.channelState[channel].samplePosition >= 0) {
+            this.setSamplePosition(channel, this.channelState[channel].samplePosition + offset);
+        }
+    };
 
     /**
      * Change the frequency of a sample playing on a given channel
@@ -298,7 +323,7 @@
      */
     jssynth.Mixer.prototype.setFrequency = function(channel, freqHz) {
         this.channelState[channel].playbackFreqHz = freqHz;
-    }
+    };
 
     /**
      * Change the volume of a sample playing on a given channel
@@ -307,7 +332,7 @@
      */
     jssynth.Mixer.prototype.setVolume = function(channel, vol) {
         this.channelState[channel].volume = vol;
-    }
+    };
 
     /**
      * Change the L/R mix for a given channel (-1 = full left, +1 = full right)
@@ -316,17 +341,16 @@
      */
     jssynth.Mixer.prototype.setPanPosition = function(channel, panPos) {
         this.channelState[channel].panPos = panPos;
-    }
+    };
 
     /**
      * (Immediately) cut playback of a sample playing on a given channel
      * @param channel
      */
     jssynth.Mixer.prototype.cut = function(channel) {
-//        this.channelState[channel].sample = undefined;
-//        this.channelState[channel].playbackFreqHz = 0;
         this.channelState[channel].samplePosition = -1;
-    }
+        this.channelState[channel].sample = undefined;
+    };
 
     /**
      * Set globally applied filters (array, 0 = left filter, 1 = right filter)
@@ -339,7 +363,7 @@
         } else {
             this.globalState.filters = null;
         }
-    }
+    };
 
 
 
@@ -352,11 +376,11 @@
                 lr: 0, /* left channel, % right mix - TODO */
                 rl: 0, /* right channel, % left mix */
                 rr: pp  /* right channel, % right mix - TODO */
-            }
+            };
         } else {
             return {ll: 1, rr: -1 };  /* surround */
         }
-    }
+    };
 
     var STEP_FUNCS = {  /* step through the sample, key is "repeatType" flag */
         'REP_NORMAL': function(samplePos, samplePosStep, repEnd, repLen) {
@@ -369,7 +393,7 @@
         'NON_REPEATING': function(samplePos, samplePosStep) {
             return samplePos + samplePosStep;
         }
-    }
+    };
 
     jssynth.Mixer.prototype.mix = function(sampleRate) {
         if (this.preMixCallback) {
@@ -384,6 +408,9 @@
         var globalVolume = this.globalState.volume;
         for (chan = 0; chan < numChannels; chan++) {
             var state = this.channelState[chan];
+            if (!state.enabled) {
+                break;
+            }
 
             var panPos = calculatePanMatrix(state.panPos);
             var sample = state.sample;
@@ -395,6 +422,10 @@
             var leftScale = scale * panPos.ll;
             var rightScale = scale * panPos.rr;
             if (sample && sample.data[0] && samplePos >= 0 && samplePosStep > 0) {
+                var representedFreq = sample.metadata.representedFreq;
+                var sampleSampleRate = sample.metadata.sampleRate;
+                samplePosStep *= sampleSampleRate / representedFreq;
+
                 var leftSampleData = sample.data[0];
                 var rightSampleData = sample.data[1] || sample.data[0]; /* mix in mono if that's all we've got */
                 var sampleLength = sample.metadata.sampleLength;
@@ -420,8 +451,8 @@
         return {
             bufferSize: numSamples,
             output: output
-        }
-    }
+        };
+    };
 
 
     jssynth.additiveSynth = function(length, sampleRate, baseFreq, harmonics, globalVolume, state) {
@@ -443,7 +474,7 @@
         }
         synthState.ofs += length;
         return results;
-    }
+    };
 
 }());
 
