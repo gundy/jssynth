@@ -9,14 +9,13 @@ the web audio API as supported in later versions of Chrome (and hopefully other 
 Here's an example of using the mixer to whet your appetite:
 
 ```JavaScript
-    var sample = new jssynth.Sample(.....);
-
-    var mixer = new jssynth.Mixer({ numChannels: 8, volume: 64}); /* initialise the mixer */
-    var audioOut = new jssynth.WebAudioOutput(mixer);             /* initialise web audio API w/ mixer */
+    var sample = new jssynth_core.Sample(.....);
+    var mixer = new jssynth_core.Mixer({ numChannels: 8, volume: 64 }); /* initialise the mixer */
+    var audioOut = new jssynth_core.WebAudioOutput(mixer);             /* initialise web audio API w/ mixer */
     audioOut.start();                                             /* start audio mixing / playing */
     
     /* trigger a sample */
-    mixer.triggerSample(0, sample, 44100);                        /* play sample, channel 0 @ 44.1kHz */
+    mixer.triggerSample(0, sample, 440);                        /* play sample, channel 0 @ A440 */
 ```
 
 Samples can be either function-based (ie. fully synthetic), or pre-canned sampled digital audio.  
@@ -27,10 +26,18 @@ player that has been built on top of the JSSynth API.  This should help to give 
 might be possible.  
 
 ```JavaScript
-    var song = jssynth.S3M.readS3Mfile(module);
-    var player = new jssynth.MOD.Player(song, 4); /* allocate 4 extra mixer channels for app use */
-    var audioOut = new jssynth.WebAudioOutput(player.getMixer());
-    audioOut.start();
+        var song = jssynth_mod.readMODfile(moduleData);
+        var mixer = new jssynth_core.Mixer({numChannels: 8 /* 4 for music, 4 for effects */ });
+        var player = new jssynth_mod.Player(this.mixer);
+        player.setSong(this.song);
+        var audioOut = new jssynth_core.WebAudioOutput(this.mixer, 4096);  /* 4096/8192/.. = buffer size */
+        audioOut.start();
+
+        // ...
+
+        mixer.triggerSample(4, sample, 8000); /* trigger a sample (music is still playing) */
+
+        // ...
 ```
 
 Games, demos, interactive UI's, DSP related apps or prototypes, the sky is the limit.

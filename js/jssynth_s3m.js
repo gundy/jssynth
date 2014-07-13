@@ -1,27 +1,71 @@
-/*
-
- Copyright (c) 2013 David Gundersen
-
- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
- and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in all copies or substantial portions
- of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+/* Thanks Marc @ stackoverflow for this module definition pattern
+ * http://stackoverflow.com/questions/13673346/supporting-both-commonjs-and-amd
  */
-(function() {
+(function(name, deps, definition) {
+    if (typeof module != 'undefined') {
+        module.exports = definition();
+    } else if (typeof define == 'function' && typeof define.amd == 'object') {
+        define(name, deps, definition);
+    } else {
+        this[name] = definition();
+    }
+}('jssynth_s3m', ['jssynth_mod'], function() {
+    "use strict";
 
-    jssynth.ns('S3M');
+    var jssynth_s3m = {};
 
-    jssynth.S3M.readS3Mfile = function (data) {
+    var TEMPLATE_EFFECT = {
+        div: function(param, playerState, channelState, period) {},
+        tick: function(param, playerState, channelState, period) {},
+        allowSampleTrigger: true,
+        allowVolumeChange: true,
+        allowPeriodChange: true
+    };
+    
+    jssynth_s3m.S3M_EFFECT_MAP = {
+        /* - */  0x00: { code: '-', effect: TEMPLATE_EFFECT },
+        /* A */  0x01: { code: 'A', effect: jssynth_mod.EFFECTS.S3M_SET_SPEED },
+        /* B */  0x02: { code: 'B', effect: jssynth_mod.EFFECTS.MOD_JUMP_TO_PATTERN },
+        /* C */  0x03: { code: 'C', effect: jssynth_mod.EFFECTS.MOD_PATTERN_BREAK },
+        /* D */  0x04: { code: 'D', effect: jssynth_mod.EFFECTS.S3M_VOLUME_SLIDE },  // ???
+        /* E */  0x05: { code: 'E', effect: jssynth_mod.EFFECTS.S3M_PORTA_DOWN },
+        /* F */  0x06: { code: 'F', effect: jssynth_mod.EFFECTS.S3M_PORTA_UP },
+        /* G */  0x07: { code: 'G', effect: jssynth_mod.EFFECTS.MOD_PORTA_TO_NOTE },
+        /* H */  0x08: { code: 'H', effect: jssynth_mod.EFFECTS.MOD_VIBRATO },
+        /* I */  0x09: { code: 'I', effect: jssynth_mod.EFFECTS.S3M_TREMOR },
+        /* J */  0x0a: { code: 'J', effect: jssynth_mod.EFFECTS.MOD_ARPEGGIO },
+        /* K */  0x0b: { code: 'K', effect: jssynth_mod.EFFECTS.MOD_VIBRATO_PLUS_VOL_SLIDE },
+        /* L */  0x0c: { code: 'L', effect: jssynth_mod.EFFECTS.MOD_PORTA_PLUS_VOL_SLIDE },
+        /* M */  0x0d: { code: 'M', effect: TEMPLATE_EFFECT },
+        /* N */  0x0e: { code: 'N', effect: TEMPLATE_EFFECT },
+        /* O */  0x0f: { code: 'O', effect: jssynth_mod.EFFECTS.MOD_SAMPLE_OFFSET },
+        /* P */  0x10: { code: 'P', effect: TEMPLATE_EFFECT },
+        /* Q */  0x11: { code: 'Q', effect: jssynth_mod.EFFECTS.S3M_RETRIG_PLUS_VOLUME_SLIDE },
+        /* R */  0x12: { code: 'R', effect: jssynth_mod.EFFECTS.MOD_TREMOLO },
+        /* S */  0x13: { code: 'S', effect: jssynth_mod.EFFECTS.S3M_EXTENDED },
+        /* S0 */0x130: { code: 'x', effect: jssynth_mod.EFFECTS.MOD_PT_SET_FILTER },
+        /* S1 */0x131: { code: 'x', effect: jssynth_mod.EFFECTS.MOD_PT_GLISSANDO_CONTROL },
+        /* S2 */0x132: { code: 'x', effect: jssynth_mod.EFFECTS.MOD_PT_SET_FINETUNE },
+        /* S3 */0x133: { code: 'x', effect: jssynth_mod.EFFECTS.MOD_PT_SET_VIBRATO_WAVEFORM },
+        /* S4 */0x134: { code: 'x', effect: jssynth_mod.EFFECTS.MOD_PT_SET_TREMOLO_WAVEFORM },
+        /* S5 */0x135: { code: 'x', effect: TEMPLATE_EFFECT },
+        /* S6 */0x136: { code: 'x', effect: TEMPLATE_EFFECT },
+        /* S7 */0x137: { code: 'x', effect: TEMPLATE_EFFECT },
+        /* S8 */0x138: { code: 'x', effect: jssynth_mod.EFFECTS.MOD_PT_16_POS_PAN },
+        /* S9 */0x139: { code: 'x', effect: TEMPLATE_EFFECT },
+        /* SA */0x13a: { code: 'x', effect: jssynth_mod.EFFECTS.S3M_STEREO_CONTROL },
+        /* SB */0x13b: { code: 'x', effect: jssynth_mod.EFFECTS.MOD_PT_PATTERN_LOOP },
+        /* SC */0x13c: { code: 'x', effect: jssynth_mod.EFFECTS.MOD_PT_CUT_NOTE },
+        /* SD */0x13d: { code: 'x', effect: jssynth_mod.EFFECTS.MOD_PT_DELAY_NOTE },
+        /* SE */0x13e: { code: 'x', effect: jssynth_mod.EFFECTS.MOD_PT_DELAY_PATTERN },
+        /* SF */0x13f: { code: 'x', effect: jssynth_mod.EFFECTS.MOD_PT_INVERT_LOOP }, /* should this be "funk loop"? */
+        /* T */  0x14: { code: 'T', effect: jssynth_mod.EFFECTS.S3M_SET_TEMPO },
+        /* U */  0x15: { code: 'U', effect: jssynth_mod.EFFECTS.S3M_FINE_VIBRATO },
+        /* V */  0x16: { code: 'V', effect: jssynth_mod.EFFECTS.S3M_SET_GLOBAL_VOLUME }
+
+    };
+
+    jssynth_s3m.readS3Mfile = function (data) {
         var readWord = function (ofs) {
             return (data.charCodeAt(ofs+1) * 256 + data.charCodeAt(ofs) )
         }
@@ -52,15 +96,37 @@
         song.initialSpeed = readByte(0x31);
         song.initialBPM = readByte(0x32);
         song.defaultFreq = { clock: 7159090.5*4 };  // NTSC
-        song.effectMap = jssynth.S3M.S3M_EFFECT_MAP;
+        song.effectMap = jssynth_s3m.S3M_EFFECT_MAP;
         song.fastS3MVolumeSlides = (createdWithTrackerVersion == 0x1300 || (flags && 0x40));
 
         var channelMap = [];
         var numChannels = 0;
+
+        var defaultPanPos = [];
+        var i;
+        for (i = 0; i < 32; i++) {
+            if ((masterVolume & 0x80) == 0x80) {
+                if (i%16 <= 7) {
+                    defaultPanPos[i] = -0.8;
+                } else {
+                    defaultPanPos[i] = 0.8;
+                }
+            } else {
+                console.log("Default pan pos = mono");
+                defaultPanPos[i] = 0;
+            }
+        }
+
         for (i = 0; i<32; i++) {
             var chanSettings = readByte(0x40+i);
             if (chanSettings !== 255 && chanSettings < 128) {
+                console.log("S3M channel "+i+" => "+chanSettings);
                 channelMap[i] = numChannels++;
+                if (chanSettings <= 7) {
+                    defaultPanPos[i] = -0.8;
+                } else if (chanSettings >= 8 && chanSettings <= 15) {
+                    defaultPanPos[i] = 0.8;
+                }
             }
         }
         song.channels = numChannels;
@@ -78,20 +144,6 @@
         var patternParapointerOfs = ppOfs + numInstruments * 2;
         var panPosOfs = patternParapointerOfs + numPatterns * 2;
 
-        var defaultPanPos = [];
-        var i;
-        for (i = 0; i < 32; i++) {
-            if (masterVolume & 0x80) {
-                console.log("Default pan pos = mono");
-                defaultPanPos[i] = 0;
-            } else {
-                if (i%16 <= 7) {
-                    defaultPanPos[i] = -0.8;
-                } else {
-                    defaultPanPos[i] = 0.8;
-                }
-            }
-        }
         song.defaultPanPos = [];
         // read pan pos
         var dp = readByte(0x35);
@@ -100,11 +152,12 @@
             for (i=0; i<32; i++) {
                 var pp = readByte(panPosOfs + i);
                 var panPos;
-                if (pp & 0x20) {
+                if ((pp & 0x20) == 0x20) {
                     panPos = defaultPanPos[i];
                 } else {
                     var pp2 = pp & 0x0f;
                     panPos = (pp2 - 7.5)/7.5;
+                    console.info("Pan pos channel "+i+" = "+panPos);
                 }
                 song.defaultPanPos[channelMap[i]] = panPos;
             }
@@ -185,7 +238,7 @@
 
                 var flags = readByte(ofs+0x1f);
                 var c2speed = readWord(ofs+0x20) + (readWord(ofs+0x22)*65536);
-                var samp =  new jssynth.Sample(data, {
+                var samp =  new jssynth_core.Sample(data, {
                     name: data.substring(ofs+1, ofs+12),
                     bits: (flags & 0x04) == 0x00 ? 8 : 16,
                     channels: (flags & 0x02) == 0x00 ? 1 : 2,
@@ -199,10 +252,10 @@
                     repeatEnd: readWord(ofs+0x18) + (readWord(ofs+0x1a) * 65536)
                 }, (readByte(ofs+0x0d) * 65536 + readWord(ofs+0x0e)) * 16);
 
-                samples[i] = new jssynth.Instrument({name: "S3M instrument", numSamples: 1}, [samp]);
+                samples[i] = new jssynth_core.Instrument({name: "S3M instrument", numSamples: 1}, [samp]);
 
             } else {
-                samples[i] = new jssynth.Instrument({name: "Empty instrument", numSamples: 0}, [{
+                samples[i] = new jssynth_core.Instrument({name: "Empty instrument", numSamples: 0}, [{
                     name: "--",
                     sampleLength: 0,
                     repeatStart: 0,
@@ -221,5 +274,7 @@
 
         return song;
     }
-
-})();
+    
+    
+    return jssynth_s3m;
+}));

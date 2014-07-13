@@ -1,26 +1,18 @@
-/*
-
- Copyright (c) 2013 David Gundersen
-
- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
- and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in all copies or substantial portions
- of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+/* Thanks Marc @ stackoverflow for this module definition pattern
+ * http://stackoverflow.com/questions/13673346/supporting-both-commonjs-and-amd
  */
-(function() {
-    jssynth.ns("MOD");
-    jssynth.ns("S3M");
-    jssynth.ns("XM");
+(function(name, deps, definition) {
+    if (typeof module != 'undefined') {
+        module.exports = definition();
+    } else if (typeof define == 'function' && typeof define.amd == 'object') {
+        define(name, deps, definition);
+    } else {
+        this[name] = definition();
+    }
+}('jssynth_mod', ['jssynth_core'], function() {
+    "use strict";
+
+    var jssynth_mod = {};
 
     var VIBRATO_TABLE = [
         /* Waveform #0: SINE WAVE TABLE ~~~~~~~~.  */
@@ -82,10 +74,10 @@
         function(vol) { return vol*2; }
     ];
 
-    jssynth.MOD.EFFECTS = {
-        'MOD_ARPEGGIO': jssynth.merge(TEMPLATE_EFFECT, {
+    jssynth_mod.EFFECTS = {
+        'MOD_ARPEGGIO': jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState) {
-                var currentNote = jssynth.MOD.MOD_PERIOD_TABLE.getNote(channelState.lastPeriod);
+                var currentNote = jssynth_mod.MOD_PERIOD_TABLE.getNote(channelState.lastPeriod);
                 if (param != 0x00) {
                     if (currentNote < 0 || currentNote > 108) {
                         channelState.effectState.arpTable = [ channelState.period, channelState.period, channelState.period];
@@ -93,9 +85,9 @@
                         var a = (param & 0xf0) / 16;
                         var b = (param & 0x0f);
                         channelState.effectState.arpTable = [
-                            jssynth.MOD.MOD_PERIOD_TABLE.getPeriod(currentNote),
-                            jssynth.MOD.MOD_PERIOD_TABLE.getPeriod(currentNote+a),
-                            jssynth.MOD.MOD_PERIOD_TABLE.getPeriod(currentNote+b)
+                            jssynth_mod.MOD_PERIOD_TABLE.getPeriod(currentNote),
+                            jssynth_mod.MOD_PERIOD_TABLE.getPeriod(currentNote+a),
+                            jssynth_mod.MOD_PERIOD_TABLE.getPeriod(currentNote+b)
                         ];
                         channelState.effectState.arpPos = 0;
                     }
@@ -108,7 +100,7 @@
                 }
             }
         }),
-        'MOD_PORTA_UP': jssynth.merge(TEMPLATE_EFFECT, {
+        'MOD_PORTA_UP': jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState) {
                 channelState.effectState.portAmt = param * 4;
             },
@@ -119,7 +111,7 @@
                 }
             }
         }),
-        'MOD_PORTA_DOWN': jssynth.merge(TEMPLATE_EFFECT, {
+        'MOD_PORTA_DOWN': jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState) {
                 channelState.effectState.portAmt = param * 4;
             },
@@ -130,7 +122,7 @@
                 }
             }
         }),
-        'MOD_PORTA_TO_NOTE': jssynth.merge(TEMPLATE_EFFECT, {
+        'MOD_PORTA_TO_NOTE': jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState, period) {
                 if (period != 0) {
                     channelState.effectState.portToNoteDestPeriod = period;
@@ -164,7 +156,7 @@
             },
             allowPeriodChange: false
         }),
-        'MOD_VIBRATO': jssynth.merge(TEMPLATE_EFFECT, {
+        'MOD_VIBRATO': jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState, period) {
                 var vibParams = channelState.effectState.vibratoParams || {
                     waveform: 0,
@@ -198,7 +190,7 @@
             }
 
         }),
-        'MOD_PORTA_PLUS_VOL_SLIDE': jssynth.merge(TEMPLATE_EFFECT, {
+        'MOD_PORTA_PLUS_VOL_SLIDE': jssynth_core.merge(TEMPLATE_EFFECT, {
             // warning - copy pasted from effect #3
             div: function(mixer, chan, param, playerState, channelState, period) {
                 if (period != 0) {
@@ -209,20 +201,20 @@
                 }
             },
             tick: function(mixer, chan, param, playerState, channelState) {
-                jssynth.MOD.EFFECTS.MOD_PORTA_TO_NOTE.tick(mixer, chan, param, playerState, channelState);
-                jssynth.MOD.EFFECTS.MOD_VOLUME_SLIDE.tick(mixer, chan, param, playerState, channelState);
+                jssynth_mod.EFFECTS.MOD_PORTA_TO_NOTE.tick(mixer, chan, param, playerState, channelState);
+                jssynth_mod.EFFECTS.MOD_VOLUME_SLIDE.tick(mixer, chan, param, playerState, channelState);
             },
             allowPeriodChange: false
         }),
-        'MOD_VIBRATO_PLUS_VOL_SLIDE': jssynth.merge(TEMPLATE_EFFECT, {
+        'MOD_VIBRATO_PLUS_VOL_SLIDE': jssynth_core.merge(TEMPLATE_EFFECT, {
             div:function() {
             },
             tick: function(mixer, chan, param, playerState, channelState) {
-                jssynth.MOD.EFFECTS.MOD_VOLUME_SLIDE.tick(mixer, chan, param, playerState, channelState);
-                jssynth.MOD.EFFECTS.MOD_VIBRATO.tick(mixer, chan, param, playerState, channelState);
+                jssynth_mod.EFFECTS.MOD_VOLUME_SLIDE.tick(mixer, chan, param, playerState, channelState);
+                jssynth_mod.EFFECTS.MOD_VIBRATO.tick(mixer, chan, param, playerState, channelState);
             }
         }),
-        'MOD_TREMOLO': jssynth.merge(TEMPLATE_EFFECT, {
+        'MOD_TREMOLO': jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState, period) {
                 var tremParams = channelState.effectState.tremoloParams || {
                     waveform: 0,
@@ -256,7 +248,7 @@
                 }
             }
         }),
-        MOD_PAN: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PAN: jssynth_core.merge(TEMPLATE_EFFECT, {
             div:function(mixer, chan, param, playerState, channelState, period) {
                 if (param <= 0x80) {
                     channelState.panPos.left = (128-param)/128;
@@ -267,12 +259,12 @@
                 }
             }
         }),
-        MOD_SAMPLE_OFFSET: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_SAMPLE_OFFSET: jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState, period) {
                 mixer.setSamplePosition(chan, param * 256);
             }
         }),
-        MOD_VOLUME_SLIDE: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_VOLUME_SLIDE: jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState, period) {
             },
             tick: function(mixer, chan, param, playerState, channelState) {
@@ -286,18 +278,18 @@
             }
 
         }),
-        MOD_JUMP_TO_PATTERN: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_JUMP_TO_PATTERN: jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState) {
                 playerState.jumpToPattern = param;
             }
         }),
-        MOD_SET_VOLUME: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_SET_VOLUME: jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState) {
                 channelState.volume = param < 0 ? 0 : param > 0x40 ? 0x40 : param;
                 channelState.lastVolume = channelState.volume;
             }
         }),
-        MOD_PATTERN_BREAK: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PATTERN_BREAK: jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState) {
                 var x = ((param & 0xf0) / 16);
                 var y = param & 0x0f;
@@ -305,46 +297,46 @@
                 playerState.breakToRow = newRow;
             }
         }),
-        MOD_PROTRACKER: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PROTRACKER: jssynth_core.merge(TEMPLATE_EFFECT, {
             div:function(mixer, chan, param, playerState, channelState, period, note, song) {
                 var newEffect = 0xe0 + ((param & 0xf0) / 16);
                 var newParam = param & 0x0f;
-                jssynth.MOD.MOD_EFFECT_MAP[newEffect].div(mixer, chan, newParam, playerState, channelState, period, note, song);
+                jssynth_mod.MOD_EFFECT_MAP[newEffect].div(mixer, chan, newParam, playerState, channelState, period, note, song);
             },
             tick:function(mixer, chan, param, playerState, channelState) {
                 var newEffect = 0xe0 + ((param & 0xf0) / 16);
                 var newParam = param & 0x0f;
-                jssynth.MOD.MOD_EFFECT_MAP[newEffect].tick(mixer, chan, newParam, playerState, channelState);
+                jssynth_mod.MOD_EFFECT_MAP[newEffect].tick(mixer, chan, newParam, playerState, channelState);
             }
         }),
-        MOD_PT_SET_FILTER: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PT_SET_FILTER: jssynth_core.merge(TEMPLATE_EFFECT, {
             div:function(mixer, chan, param, playerState, channelState, period) {
                 playerState.filter = param;
             }
         }),
-        MOD_PT_FINE_PORTA_UP: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PT_FINE_PORTA_UP: jssynth_core.merge(TEMPLATE_EFFECT, {
             tick:function(mixer, chan, param, playerState, channelState) {
                 channelState.period -= param * 4;
                 channelState.lastPeriod = channelState.period;
             }
         }),
-        MOD_PT_FINE_PORTA_DOWN: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PT_FINE_PORTA_DOWN: jssynth_core.merge(TEMPLATE_EFFECT, {
             tick:function(mixer, chan, param, playerState, channelState) {
                 channelState.period += param * 4;
                 channelState.lastPeriod = channelState.period;
             }
         }),
-        MOD_PT_GLISSANDO_CONTROL: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PT_GLISSANDO_CONTROL: jssynth_core.merge(TEMPLATE_EFFECT, {
             tick:function(mixer, chan, param, playerState, channelState) {
                 playerState.glissandoControl = param;
             }
         }),
-        MOD_PT_SET_VIBRATO_WAVEFORM: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PT_SET_VIBRATO_WAVEFORM: jssynth_core.merge(TEMPLATE_EFFECT, {
             div:function(mixer, chan, param, playerState, channelState) {
                 channelState.effectParams.vibratoParams.waveform = param & 0x07;
             }
         }),
-        MOD_PT_SET_FINETUNE: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PT_SET_FINETUNE: jssynth_core.merge(TEMPLATE_EFFECT, {
             div:function(mixer, chan, param, playerState, channelState, period, note, song) {
                 if (note.sampleNumber != 0) {
                     var instrument = song.instruments[note.sampleNumber - 1];
@@ -352,7 +344,7 @@
                 }
             }
         }),
-        MOD_PT_PATTERN_LOOP: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PT_PATTERN_LOOP: jssynth_core.merge(TEMPLATE_EFFECT, {
             div:function(mixer, chan, param, playerState, channelState, period, note, song) {
                 var doLoop = function() {
                     channelState.effectState.patternLoop.count--;
@@ -376,25 +368,25 @@
                 }
             }
         }),
-        MOD_PT_SET_TREMOLO_WAVEFORM: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PT_SET_TREMOLO_WAVEFORM: jssynth_core.merge(TEMPLATE_EFFECT, {
             div:function(mixer, chan, param, playerState, channelState) {
                 channelState.effectState.tremoloParams.waveform = param & 0x07;
             }
         }),
-        MOD_PT_16_POS_PAN: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PT_16_POS_PAN: jssynth_core.merge(TEMPLATE_EFFECT, {
             div:function(mixer, chan, param, playerState, channelState) {
                 channelState.panPos.left = (15 - param) / 15;
                 channelState.panPos.right = param / 15;
             }
         }),
-        MOD_PT_RETRIG_NOTE: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PT_RETRIG_NOTE: jssynth_core.merge(TEMPLATE_EFFECT, {
             tick:function(mixer, chan, param, playerState, channelState) {
                 if ((playerState.tick + 1) % param == 0) {
                     mixer.setSamplePosition(chan, 0);
                 }
             }
         }),
-        MOD_PT_FINE_VOLSLIDE_UP: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PT_FINE_VOLSLIDE_UP: jssynth_core.merge(TEMPLATE_EFFECT, {
             div:function(mixer, chan, param, playerState, channelState) {
                 channelState.volume += param;
                 if (channelState.volume >  64) {
@@ -403,7 +395,7 @@
                 channelState.lastVolume = channelState.volume;
             }
         }),
-        MOD_PT_FINE_VOLSLIDE_DOWN: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PT_FINE_VOLSLIDE_DOWN: jssynth_core.merge(TEMPLATE_EFFECT, {
             div:function(mixer, chan, param, playerState, channelState) {
                 channelState.volume -= param;
                 if (channelState.volume < 0) {
@@ -412,7 +404,7 @@
                 channelState.lastVolume = channelState.volume;
             }
         }),
-        MOD_PT_CUT_NOTE: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PT_CUT_NOTE: jssynth_core.merge(TEMPLATE_EFFECT, {
             tick:function(mixer, chan, param, playerState, channelState) {
                 if (playerState.tick >= param) {
                     channelState.volume = 0;
@@ -420,11 +412,11 @@
                 channelState.lastVolume = channelState.volume;
             }
         }),
-        MOD_PT_DELAY_NOTE: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PT_DELAY_NOTE: jssynth_core.merge(TEMPLATE_EFFECT, {
             div:function(mixer, chan, param, playerState, channelState, period, note, song) {
                 var noteToPlay = note.note;
                 if (noteToPlay < 0) {
-                    noteToPlay = jssynth.MOD.MOD_PERIOD_TABLE.getNote(parms.period);
+                    noteToPlay = jssynth_mod.MOD_PERIOD_TABLE.getNote(parms.period);
                 }
                 var instrument = note.sampleNumber > 0 ? song.instruments[note.sampleNumber - 1] : null;
                 var sample = null;
@@ -442,7 +434,7 @@
                 if (playerState.tick == (param - 1)) {
                     var note = channelState.effectState.noteDelay.note;
 
-                    var period = note.note < 0 ? 0 : jssynth.MOD.MOD_PERIOD_TABLE.getPeriod(note.note);
+                    var period = note.note < 0 ? 0 : jssynth_mod.MOD_PERIOD_TABLE.getPeriod(note.note);
                     var volume = note.volume;
                     var sample =  channelState.effectState.noteDelay.sample;
                     if (sample) {
@@ -465,14 +457,14 @@
             allowSampleTrigger: false,
             allowVolumeChange: false
         }),
-        MOD_PT_DELAY_PATTERN: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PT_DELAY_PATTERN: jssynth_core.merge(TEMPLATE_EFFECT, {
             div:function(mixer, chan, param, playerState) {
                 playerState.patternDelay = param * playerState.speed;
             },
             tick:function(mixer, chan, param, playerState, channelState) {
             }
         }),
-        MOD_PT_INVERT_LOOP: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_PT_INVERT_LOOP: jssynth_core.merge(TEMPLATE_EFFECT, {
             div:function(mixer, chan, param, playerState, channelState, period, note, song) {
                 channelState.effectState.invertLoop.delay = 0;
                 var ins = channelState.sample;
@@ -497,7 +489,7 @@
                 }
             }
         }),
-        MOD_SET_SPEED: jssynth.merge(TEMPLATE_EFFECT, {
+        MOD_SET_SPEED: jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState) {
                 if (param <= 0x20) {
                     playerState.speed = param;
@@ -506,17 +498,17 @@
                 }
             }
         }),
-        S3M_SET_SPEED: jssynth.merge(TEMPLATE_EFFECT, {
+        S3M_SET_SPEED: jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState) {
                 playerState.speed = param;
             }
         }),
-        S3M_SET_TEMPO: jssynth.merge(TEMPLATE_EFFECT, {
+        S3M_SET_TEMPO: jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState) {
                 playerState.bpm = param;
             }
         }),
-        S3M_VOLUME_SLIDE: jssynth.merge(TEMPLATE_EFFECT, {
+        S3M_VOLUME_SLIDE: jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState, period) {
                 if (param == 0x00) {
                     param = channelState.effectState.lastS3MVolSlide || 0x00;
@@ -552,7 +544,7 @@
                 channelState.lastVolume = channelState.volume;
             }
         }),
-        S3M_PORTA_DOWN: jssynth.merge(TEMPLATE_EFFECT, {
+        S3M_PORTA_DOWN: jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState, period) {
                 if (param == 0x00) {
                     param = channelState.effectState.lastS3MPortDown || 0x00;
@@ -581,12 +573,12 @@
                 }
             }
         }),
-        S3M_PORTA_UP: jssynth.merge(TEMPLATE_EFFECT, {
+        S3M_PORTA_UP: jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState, period) {
                 if (param == 0x00) {
-                    param = channelState.effectState.lastS3MPortUp || 0x00;
+                    param = channelState.effectState.lastS3MPortDown || 0x00;
                 }
-                channelState.effectState.lastS3MPortUp = param;
+                channelState.effectState.lastS3MPortDown = param;
                 var a = (param & 0xf0) / 16;
                 var b = param & 0x0f;
                 if (a == 0x0f) {
@@ -599,7 +591,7 @@
                 }
             },
             tick: function(mixer, chan, param, playerState, channelState) {
-                var slideAmt = channelState.effectState.lastS3MPortUp;
+                var slideAmt = channelState.effectState.lastS3MPortDown;
                 var a = (slideAmt & 0xf0) / 16;
                 var b = (slideAmt & 0x0f);
                 if (a < 0x0e) {
@@ -610,7 +602,7 @@
                 }
             }
         }),
-        S3M_RETRIG_PLUS_VOLUME_SLIDE: jssynth.merge(TEMPLATE_EFFECT, {
+        S3M_RETRIG_PLUS_VOLUME_SLIDE: jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState, period) {
                 if (param & 0xf0 != 0x00) {
                     channelState.effectState.lastS3MRetrigVolSldParam = (param & 0xf0) / 16;
@@ -631,19 +623,19 @@
                 channelState.lastVolume = channelState.volume;
             }
         }),
-        S3M_EXTENDED: jssynth.merge(TEMPLATE_EFFECT, {
+        S3M_EXTENDED: jssynth_core.merge(TEMPLATE_EFFECT, {
             div:function(mixer, chan, param, playerState, channelState, period, note, song) {
                 var newEffect = 0x130 + ((param & 0xf0) / 16);
                 var newParam = param & 0x0f;
-                jssynth.S3M.S3M_EFFECT_MAP[newEffect].effect.div(mixer, chan, newParam, playerState, channelState, period, note, song);
+                jssynth_s3m.S3M_EFFECT_MAP[newEffect].effect.div(mixer, chan, newParam, playerState, channelState, period, note, song);
             },
             tick:function(mixer, chan, param, playerState, channelState) {
                 var newEffect = 0x130 + ((param & 0xf0) / 16);
                 var newParam = param & 0x0f;
-                jssynth.S3M.S3M_EFFECT_MAP[newEffect].effect.tick(mixer, chan, newParam, playerState, channelState);
+                jssynth_s3m.S3M_EFFECT_MAP[newEffect].effect.tick(mixer, chan, newParam, playerState, channelState);
             }
         }),
-        S3M_FINE_VIBRATO: jssynth.merge(TEMPLATE_EFFECT, {
+        S3M_FINE_VIBRATO: jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState, period) {
                 var vibParams = channelState.effectState.vibratoParams || {
                     waveform: 0,
@@ -677,7 +669,7 @@
             }
 
         }),
-        S3M_TREMOR: jssynth.merge(TEMPLATE_EFFECT, {
+        S3M_TREMOR: jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState) {
                 console.log("S3M Tremor; Does this sound okay?!");
                 if (param > 0x00) {
@@ -695,12 +687,12 @@
                 }
             }
         }),
-        S3M_SET_GLOBAL_VOLUME: jssynth.merge(TEMPLATE_EFFECT, {
+        S3M_SET_GLOBAL_VOLUME: jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState) {
                 playerState.globalVolume = param;
             }
         }),
-        S3M_STEREO_CONTROL: jssynth.merge(TEMPLATE_EFFECT, {
+        S3M_STEREO_CONTROL: jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState) {
                 if (param > 7) {
                     param = param - 16;
@@ -710,7 +702,7 @@
                 channelState.panPos.right = param / 15;
             }
         }),
-        XM_GLOBAL_VOLUME_SLIDE: jssynth.merge(TEMPLATE_EFFECT, {
+        XM_GLOBAL_VOLUME_SLIDE: jssynth_core.merge(TEMPLATE_EFFECT, {
             div: function(mixer, chan, param, playerState, channelState, period) {
                 if (param == 0x00) {
                     param = channelState.effectState.lastXMGlobalVolSlide || 0x00;
@@ -748,23 +740,23 @@
     };
 
 
-    jssynth.MOD.MOD_EFFECT_MAP = {
-        0x00: { code: '0', effect: jssynth.MOD.EFFECTS.MOD_ARPEGGIO },
-        0x01: { code: '1', effect: jssynth.MOD.EFFECTS.MOD_PORTA_UP },
-        0x02: { code: '2', effect: jssynth.MOD.EFFECTS.MOD_PORTA_DOWN },
-        0x03: { code: '3', effect: jssynth.MOD.EFFECTS.MOD_PORTA_TO_NOTE },
-        0x04: { code: '4', effect: jssynth.MOD.EFFECTS.MOD_VIBRATO },
-        0x05: { code: '5', effect: jssynth.MOD.EFFECTS.MOD_PORTA_PLUS_VOL_SLIDE },
-        0x06: { code: '6', effect: jssynth.MOD.EFFECTS.MOD_VIBRATO_PLUS_VOL_SLIDE },
-        0x07: { code: '7', effect: jssynth.MOD.EFFECTS.MOD_TREMOLO },
-        0x08: { code: '8', effect: jssynth.MOD.EFFECTS.MOD_PAN },
-        0x09: { code: '9', effect: jssynth.MOD.EFFECTS.MOD_SAMPLE_OFFSET },
-        0x0a: { code: 'a', effect: jssynth.MOD.EFFECTS.MOD_VOLUME_SLIDE },
-        0x0b: { code: 'b', effect: jssynth.MOD.EFFECTS.MOD_JUMP_TO_PATTERN },
-        0x0c: { code: 'c', effect: jssynth.MOD.EFFECTS.MOD_SET_VOLUME },
-        0x0d: { code: 'd', effect: jssynth.MOD.EFFECTS.MOD_PATTERN_BREAK },
-        0x0e: { code: 'e', effect: jssynth.MOD.EFFECTS.MOD_PROTRACKER },
-        0x0f: { code: 'f', effect: jssynth.MOD.EFFECTS.MOD_SET_SPEED },
+    jssynth_mod.MOD_EFFECT_MAP = {
+        0x00: { code: '0', effect: jssynth_mod.EFFECTS.MOD_ARPEGGIO },
+        0x01: { code: '1', effect: jssynth_mod.EFFECTS.MOD_PORTA_UP },
+        0x02: { code: '2', effect: jssynth_mod.EFFECTS.MOD_PORTA_DOWN },
+        0x03: { code: '3', effect: jssynth_mod.EFFECTS.MOD_PORTA_TO_NOTE },
+        0x04: { code: '4', effect: jssynth_mod.EFFECTS.MOD_VIBRATO },
+        0x05: { code: '5', effect: jssynth_mod.EFFECTS.MOD_PORTA_PLUS_VOL_SLIDE },
+        0x06: { code: '6', effect: jssynth_mod.EFFECTS.MOD_VIBRATO_PLUS_VOL_SLIDE },
+        0x07: { code: '7', effect: jssynth_mod.EFFECTS.MOD_TREMOLO },
+        0x08: { code: '8', effect: jssynth_mod.EFFECTS.MOD_PAN },
+        0x09: { code: '9', effect: jssynth_mod.EFFECTS.MOD_SAMPLE_OFFSET },
+        0x0a: { code: 'a', effect: jssynth_mod.EFFECTS.MOD_VOLUME_SLIDE },
+        0x0b: { code: 'b', effect: jssynth_mod.EFFECTS.MOD_JUMP_TO_PATTERN },
+        0x0c: { code: 'c', effect: jssynth_mod.EFFECTS.MOD_SET_VOLUME },
+        0x0d: { code: 'd', effect: jssynth_mod.EFFECTS.MOD_PATTERN_BREAK },
+        0x0e: { code: 'e', effect: jssynth_mod.EFFECTS.MOD_PROTRACKER },
+        0x0f: { code: 'f', effect: jssynth_mod.EFFECTS.MOD_SET_SPEED },
         0x10: { code: 'g', effect: TEMPLATE_EFFECT },
         0x11: { code: 'h', effect: TEMPLATE_EFFECT },
         0x12: { code: 'i', effect: TEMPLATE_EFFECT },
@@ -787,133 +779,592 @@
         0x23: { code: 'z', effect: TEMPLATE_EFFECT },
 
         /* protracker commands */
-        0xe0: jssynth.MOD.EFFECTS.MOD_PT_SET_FILTER,
-        0xe1: jssynth.MOD.EFFECTS.MOD_PT_FINE_PORTA_UP,
-        0xe2: jssynth.MOD.EFFECTS.MOD_PT_FINE_PORTA_DOWN,
-        0xe3: jssynth.MOD.EFFECTS.MOD_PT_GLISSANDO_CONTROL,
-        0xe4: jssynth.MOD.EFFECTS.MOD_PT_SET_VIBRATO_WAVEFORM,
-        0xe5: jssynth.MOD.EFFECTS.MOD_PT_SET_FINETUNE,
-        0xe6: jssynth.MOD.EFFECTS.MOD_PT_PATTERN_LOOP,
-        0xe7: jssynth.MOD.EFFECTS.MOD_PT_SET_TREMOLO_WAVEFORM,
-        0xe8: jssynth.MOD.EFFECTS.MOD_PT_16_POS_PAN,
-        0xe9: jssynth.MOD.EFFECTS.MOD_PT_RETRIG_NOTE,
-        0xea: jssynth.MOD.EFFECTS.MOD_PT_FINE_VOLSLIDE_UP,
-        0xeb: jssynth.MOD.EFFECTS.MOD_PT_FINE_VOLSLIDE_DOWN,
-        0xec: jssynth.MOD.EFFECTS.MOD_PT_CUT_NOTE,
-        0xed: jssynth.MOD.EFFECTS.MOD_PT_DELAY_NOTE,
-        0xee: jssynth.MOD.EFFECTS.MOD_PT_DELAY_PATTERN,
-        0xef: jssynth.MOD.EFFECTS.MOD_PT_INVERT_LOOP
+        0xe0: jssynth_mod.EFFECTS.MOD_PT_SET_FILTER,
+        0xe1: jssynth_mod.EFFECTS.MOD_PT_FINE_PORTA_UP,
+        0xe2: jssynth_mod.EFFECTS.MOD_PT_FINE_PORTA_DOWN,
+        0xe3: jssynth_mod.EFFECTS.MOD_PT_GLISSANDO_CONTROL,
+        0xe4: jssynth_mod.EFFECTS.MOD_PT_SET_VIBRATO_WAVEFORM,
+        0xe5: jssynth_mod.EFFECTS.MOD_PT_SET_FINETUNE,
+        0xe6: jssynth_mod.EFFECTS.MOD_PT_PATTERN_LOOP,
+        0xe7: jssynth_mod.EFFECTS.MOD_PT_SET_TREMOLO_WAVEFORM,
+        0xe8: jssynth_mod.EFFECTS.MOD_PT_16_POS_PAN,
+        0xe9: jssynth_mod.EFFECTS.MOD_PT_RETRIG_NOTE,
+        0xea: jssynth_mod.EFFECTS.MOD_PT_FINE_VOLSLIDE_UP,
+        0xeb: jssynth_mod.EFFECTS.MOD_PT_FINE_VOLSLIDE_DOWN,
+        0xec: jssynth_mod.EFFECTS.MOD_PT_CUT_NOTE,
+        0xed: jssynth_mod.EFFECTS.MOD_PT_DELAY_NOTE,
+        0xee: jssynth_mod.EFFECTS.MOD_PT_DELAY_PATTERN,
+        0xef: jssynth_mod.EFFECTS.MOD_PT_INVERT_LOOP
     };
 
-    jssynth.S3M.S3M_EFFECT_MAP = {
-        /* - */  0x00: { code: '-', effect: TEMPLATE_EFFECT },
-        /* A */  0x01: { code: 'A', effect: jssynth.MOD.EFFECTS.S3M_SET_SPEED },
-        /* B */  0x02: { code: 'B', effect: jssynth.MOD.EFFECTS.MOD_JUMP_TO_PATTERN },
-        /* C */  0x03: { code: 'C', effect: jssynth.MOD.EFFECTS.MOD_PATTERN_BREAK },
-        /* D */  0x04: { code: 'D', effect: jssynth.MOD.EFFECTS.S3M_VOLUME_SLIDE },  // ???
-        /* E */  0x05: { code: 'E', effect: jssynth.MOD.EFFECTS.S3M_PORTA_DOWN },
-        /* F */  0x06: { code: 'F', effect: jssynth.MOD.EFFECTS.S3M_PORTA_UP },
-        /* G */  0x07: { code: 'G', effect: jssynth.MOD.EFFECTS.MOD_PORTA_TO_NOTE },
-        /* H */  0x08: { code: 'H', effect: jssynth.MOD.EFFECTS.MOD_VIBRATO },
-        /* I */  0x09: { code: 'I', effect: jssynth.MOD.EFFECTS.S3M_TREMOR },
-        /* J */  0x0a: { code: 'J', effect: jssynth.MOD.EFFECTS.MOD_ARPEGGIO },
-        /* K */  0x0b: { code: 'K', effect: jssynth.MOD.EFFECTS.MOD_VIBRATO_PLUS_VOL_SLIDE },
-        /* L */  0x0c: { code: 'L', effect: jssynth.MOD.EFFECTS.MOD_PORTA_PLUS_VOL_SLIDE },
-        /* M */  0x0d: { code: 'M', effect: TEMPLATE_EFFECT },
-        /* N */  0x0e: { code: 'N', effect: TEMPLATE_EFFECT },
-        /* O */  0x0f: { code: 'O', effect: jssynth.MOD.EFFECTS.MOD_SAMPLE_OFFSET },
-        /* P */  0x10: { code: 'P', effect: TEMPLATE_EFFECT },
-        /* Q */  0x11: { code: 'Q', effect: jssynth.MOD.EFFECTS.S3M_RETRIG_PLUS_VOLUME_SLIDE },
-        /* R */  0x12: { code: 'R', effect: jssynth.MOD.EFFECTS.MOD_TREMOLO },
-        /* S */  0x13: { code: 'S', effect: jssynth.MOD.EFFECTS.S3M_EXTENDED },
-        /* S0 */0x130: { code: 'x', effect: jssynth.MOD.EFFECTS.MOD_PT_SET_FILTER },
-        /* S1 */0x131: { code: 'x', effect: jssynth.MOD.EFFECTS.MOD_PT_GLISSANDO_CONTROL },
-        /* S2 */0x132: { code: 'x', effect: jssynth.MOD.EFFECTS.MOD_PT_SET_FINETUNE },
-        /* S3 */0x133: { code: 'x', effect: jssynth.MOD.EFFECTS.MOD_PT_SET_VIBRATO_WAVEFORM },
-        /* S4 */0x134: { code: 'x', effect: jssynth.MOD.EFFECTS.MOD_PT_SET_TREMOLO_WAVEFORM },
-        /* S5 */0x135: { code: 'x', effect: TEMPLATE_EFFECT },
-        /* S6 */0x136: { code: 'x', effect: TEMPLATE_EFFECT },
-        /* S7 */0x137: { code: 'x', effect: TEMPLATE_EFFECT },
-        /* S8 */0x138: { code: 'x', effect: jssynth.MOD.EFFECTS.MOD_PT_16_POS_PAN },
-        /* S9 */0x139: { code: 'x', effect: TEMPLATE_EFFECT },
-        /* SA */0x13a: { code: 'x', effect: jssynth.MOD.EFFECTS.S3M_STEREO_CONTROL },
-        /* SB */0x13b: { code: 'x', effect: jssynth.MOD.EFFECTS.MOD_PT_PATTERN_LOOP },
-        /* SC */0x13c: { code: 'x', effect: jssynth.MOD.EFFECTS.MOD_PT_CUT_NOTE },
-        /* SD */0x13d: { code: 'x', effect: jssynth.MOD.EFFECTS.MOD_PT_DELAY_NOTE },
-        /* SE */0x13e: { code: 'x', effect: jssynth.MOD.EFFECTS.MOD_PT_DELAY_PATTERN },
-        /* SF */0x13f: { code: 'x', effect: jssynth.MOD.EFFECTS.MOD_PT_INVERT_LOOP }, /* should this be "funk loop"? */
-        /* T */  0x14: { code: 'T', effect: jssynth.MOD.EFFECTS.S3M_SET_TEMPO },
-        /* U */  0x15: { code: 'U', effect: jssynth.MOD.EFFECTS.S3M_FINE_VIBRATO },
-        /* V */  0x16: { code: 'V', effect: jssynth.MOD.EFFECTS.S3M_SET_GLOBAL_VOLUME }
+    /*
+     * ======================================== PLAYER ===========================================
+     */
+
+    var FREQ_NTSC = { clock: 7159090.5*4 };
+    var FREQ_PAL =  { clock: 7093789.2*4 };
+
+
+    jssynth_mod.MOD_FINETUNE_TABLE = [ 0, 1, 2, 3, 4, 5, 6, 7, -8, -7, -6, -5, -4, -3, -2, -1 ];
+
+    jssynth_mod.MOD_PERIOD_TABLE = {
+        PERIODS: [
+            27392,25856,24384,23040,21696,20480,19328,18240,17216,16256,15360,14496,
+            13696,12928,12192,11520,10848,10240, 9664, 9120, 8608, 8128, 7680, 7248,
+            6848, 6464, 6096, 5760, 5424, 5120, 4832, 4560, 4304, 4064, 3840, 3624,
+            3424, 3232, 3048, 2880, 2712, 2560, 2416, 2280, 2152, 2032, 1920, 1812,
+            1712, 1616, 1524, 1440, 1356, 1280, 1208, 1140, 1076, 1016,  960,  906,
+            856,  808,  762,  720,  678,  640,  604,  570,  538,  508,  480,  453,
+            428,  404,  381,  360,  339,  320,  302,  285,  269,  254,  240,  226,
+            214,  202,  190,  180,  170,  160,  151,  143,  135,  127,  120,  113,
+            107,  101,   95,   90,   85,   80,   75,   71,   67,   63,   60,   56
+        ],
+        NOTE_NAMES: [
+            "C-0", "C#0", "D-0", "D#0", "E-0", "F-0", "F#0", "G-0", "G#0", "A-0", "A#0", "B-0",
+            "C-1", "C#1", "D-1", "D#1", "E-1", "F-1", "F#1", "G-1", "G#1", "A-1", "A#1", "B-1",
+            "C-2", "C#2", "D-2", "D#2", "E-2", "F-2", "F#2", "G-2", "G#2", "A-2", "A#2", "B-2",
+            "C-3", "C#3", "D-3", "D#3", "E-3", "F-3", "F#3", "G-3", "G#3", "A-3", "A#3", "B-3",
+            "C-4", "C#4", "D-4", "D#4", "E-4", "F-4", "F#4", "G-4", "G#4", "A-4", "A#4", "B-4",
+            "C-5", "C#5", "D-5", "D#5", "E-5", "F-5", "F#5", "G-5", "G#5", "A-5", "A#5", "B-5",
+            "C-6", "C#6", "D-6", "D#6", "E-6", "F-6", "F#6", "G-6", "G#6", "A-6", "A#6", "B-6",
+            "C-7", "C#7", "D-7", "D#7", "E-7", "F-7", "F#7", "G-7", "G#7", "A-7", "A#7", "B-7",
+            "C-8", "C#8", "D-8", "D#8", "E-8", "F-8", "F#8", "G-8", "G#8", "A-8", "A#8", "B-8"
+        ],
+        getNote : function (period) {
+            var i = 0;
+            if (period <= 0) {
+                return -1;
+            }
+            for (i = 0; i < jssynth_mod.MOD_PERIOD_TABLE.PERIODS.length - 1; i++) {
+                var p = jssynth_mod.MOD_PERIOD_TABLE.PERIODS[i];
+                var p1 = jssynth_mod.MOD_PERIOD_TABLE.PERIODS[i+1];
+                if (Math.abs(p - period) < Math.abs(p1 - period)) {
+                    return i;
+                }
+            }
+            return -1;
+        },
+        getPeriod : function(note) {
+            return jssynth_mod.MOD_PERIOD_TABLE.PERIODS[note] || -1;
+        },
+        getName : function(note) {
+            if (note == 254) {
+                return "oFF";
+            } else {
+                return jssynth_mod.MOD_PERIOD_TABLE.NOTE_NAMES[note] || "---";
+            }
+        }
 
     };
 
+    var Amiga_Lowpass_Filter_3300_12dB_per_octave = function() {
+        var NZEROS = 2;
+        var NPOLES = 2;
+        var GAIN = 24.33619312;
 
-    jssynth.XM.XM_EFFECT_MAP = {
-        0x00: { code: '0', effect: jssynth.MOD.EFFECTS.MOD_ARPEGGIO },
-        0x01: { code: '1', effect: jssynth.MOD.EFFECTS.MOD_PORTA_UP },
-        0x02: { code: '2', effect: jssynth.MOD.EFFECTS.MOD_PORTA_DOWN },
-        0x03: { code: '3', effect: jssynth.MOD.EFFECTS.MOD_PORTA_TO_NOTE },
-        0x04: { code: '4', effect: jssynth.MOD.EFFECTS.MOD_VIBRATO },
-        0x05: { code: '5', effect: jssynth.MOD.EFFECTS.MOD_PORTA_PLUS_VOL_SLIDE },
-        0x06: { code: '6', effect: jssynth.MOD.EFFECTS.MOD_VIBRATO_PLUS_VOL_SLIDE },
-        0x07: { code: '7', effect: jssynth.MOD.EFFECTS.MOD_TREMOLO },
-        0x08: { code: '8', effect: jssynth.MOD.EFFECTS.MOD_PAN },
-        0x09: { code: '9', effect: jssynth.MOD.EFFECTS.MOD_SAMPLE_OFFSET },
-        0x0a: { code: 'a', effect: jssynth.MOD.EFFECTS.MOD_VOLUME_SLIDE },
-        0x0b: { code: 'b', effect: jssynth.MOD.EFFECTS.MOD_JUMP_TO_PATTERN },
-        0x0c: { code: 'c', effect: jssynth.MOD.EFFECTS.MOD_SET_VOLUME },
-        0x0d: { code: 'd', effect: jssynth.MOD.EFFECTS.MOD_PATTERN_BREAK },
-        0x0e: { code: 'e', effect: jssynth.MOD.EFFECTS.MOD_PROTRACKER },
-        0x0f: { code: 'f', effect: jssynth.MOD.EFFECTS.MOD_SET_SPEED },
+        var xv = [ 0, 0, 0 ], yv = [0, 0, 0];
+
+        this.next = function(sample) {
+            xv[0] = xv[1]; xv[1] = xv[2];
+            xv[2] = sample / GAIN;
+            yv[0] = yv[1]; yv[1] = yv[2];
+            yv[2] = (xv[0] + xv[2]) + 2 * xv[1]
+                + ( -0.5147540757 * yv[0] ) + ( 1.3503898310 * yv[1]);
+            return yv[2];
+        };
+    };
+
+    var AMIGA_FILTERS = [ new Amiga_Lowpass_Filter_3300_12dB_per_octave(), new Amiga_Lowpass_Filter_3300_12dB_per_octave() ];
+
+    jssynth_mod.Player = function(mixer) {
+
+        this.playing = true;
+        this.loggingEnabled = false;
+        this.song = null;
+
+        this.stateCallback = null;
+
+
+
         /*
-         G      Set global volume
-         H  (*) Global volume slide
-         K      Key off
-         L      Set envelope position
-         P  (*) Panning slide
-         R  (*) Multi retrig note
-         T      Tremor
-         X1 (*) Extra fine porta up
-         X2 (*) Extra fine porta down
-
+         * SONG PLAYER ...
          */
 
-        0x10: { code: 'G', effect: jssynth.MOD.EFFECTS.S3M_SET_GLOBAL_VOLUME },
-        0x11: { code: 'H', effect: jssynth.MOD.EFFECTS.XM_GLOBAL_VOLUME_SLIDE },  // TODO GLOBAL VOLUME SLIDE
-        0x12: { code: 'I', effect: TEMPLATE_EFFECT },  // NOTHING
-        0x13: { code: 'J', effect: TEMPLATE_EFFECT },  // NOTHING
-        0x14: { code: 'K', effect: TEMPLATE_EFFECT },  // TODO KEY OFF
-        0x15: { code: 'L', effect: TEMPLATE_EFFECT },  // TODO SET ENVELOPE POSITION
-        0x16: { code: 'M', effect: TEMPLATE_EFFECT },  // NOTHING
-        0x17: { code: 'N', effect: TEMPLATE_EFFECT },  // NOTHING
-        0x18: { code: 'O', effect: TEMPLATE_EFFECT },  // NOTHING
-        0x19: { code: 'P', effect: TEMPLATE_EFFECT },  // TODO PANNING SLIDE
-        0x1a: { code: 'R', effect: jssynth.MOD.EFFECTS.S3M_RETRIG_PLUS_VOLUME_SLIDE },  // TODO MULTI RETRIG NOTE
-        0x1b: { code: 'S', effect: TEMPLATE_EFFECT },  // NOTHING
-        0x1c: { code: 'T', effect: jssynth.MOD.EFFECTS.S3M_TREMOR },  // TODO TREMOR
-        0x1d: { code: 'U', effect: TEMPLATE_EFFECT },  // NOTHING
-        0x1e: { code: 'V', effect: TEMPLATE_EFFECT },  // NOTHING
-        0x1f: { code: 'W', effect: TEMPLATE_EFFECT },  // NOTHING
-        0x20: { code: 'X', effect: TEMPLATE_EFFECT },  // NOTHING
+        this.mixer = mixer;
 
-        /* protracker commands */
-        0xe0: jssynth.MOD.EFFECTS.MOD_PT_SET_FILTER,
-        0xe1: jssynth.MOD.EFFECTS.MOD_PT_FINE_PORTA_UP,
-        0xe2: jssynth.MOD.EFFECTS.MOD_PT_FINE_PORTA_DOWN,
-        0xe3: jssynth.MOD.EFFECTS.MOD_PT_GLISSANDO_CONTROL,
-        0xe4: jssynth.MOD.EFFECTS.MOD_PT_SET_VIBRATO_WAVEFORM,
-        0xe5: jssynth.MOD.EFFECTS.MOD_PT_SET_FINETUNE,
-        0xe6: jssynth.MOD.EFFECTS.MOD_PT_PATTERN_LOOP,
-        0xe7: jssynth.MOD.EFFECTS.MOD_PT_SET_TREMOLO_WAVEFORM,
-        0xe8: jssynth.MOD.EFFECTS.MOD_PT_16_POS_PAN,
-        0xe9: jssynth.MOD.EFFECTS.MOD_PT_RETRIG_NOTE,
-        0xea: jssynth.MOD.EFFECTS.MOD_PT_FINE_VOLSLIDE_UP,
-        0xeb: jssynth.MOD.EFFECTS.MOD_PT_FINE_VOLSLIDE_DOWN,
-        0xec: jssynth.MOD.EFFECTS.MOD_PT_CUT_NOTE,
-        0xed: jssynth.MOD.EFFECTS.MOD_PT_DELAY_NOTE,
-        0xee: jssynth.MOD.EFFECTS.MOD_PT_DELAY_PATTERN,
-        0xef: jssynth.MOD.EFFECTS.MOD_PT_INVERT_LOOP
+
+        this.mixer.setPreMixCallback(this.preSampleMix, this);
+
     };
 
-})();
+    jssynth_mod.Player.prototype.setSong = function(song) {
+        this.song = song;
+        this.effectMap = song.effectMap || jssynth_mod.MOD_EFFECT_MAP;
+        this.playerState = {
+            freq: song.defaultFreq || FREQ_PAL,
+
+            pos: 0,
+            row: -1,
+            tick: 6,
+            speed: song.initialSpeed || 6,
+            bpm: song.initialBPM || 125,
+            globalVolume: song.globalVolume || 64,
+            patternDelay: 0,
+            glissandoControl: 0,  /* 1 means that slides are locked to note values */
+            breakToRow: null,
+            jumpToPattern: null,
+            l_breakToRow: null,  /* for pattern loop */
+            l_jumpToPattern: null,
+            fastS3MVolumeSlides: song.fastS3MVolumeSlides || false,
+            filter: 0
+        };
+
+        var defaultPanPos = song.defaultPanPos || [ -0.8, 0.8, 0.8, -0.8, -0.8, 0.8, 0.8, -0.8,-0.8, 0.8, 0.8, -0.8,-0.8, 0.8, 0.8, -0.8];
+        this.channelState = [];
+        for (var i = 0; i < song.channels; i++) {
+            this.channelState[i] = {
+                chan: i,
+                panPos: defaultPanPos[i],
+                volume: 64,
+                lastVolume: undefined,  /* last officially set volume - base volume for tremolo */
+                period: 0,
+                pitchOfs: 1,
+                lastPeriod: 0,  /* last officially set period - base period for vibrato */
+                effect: 0,
+                effectParameter: 0,
+                effectState: {
+                    tremorCount: 0,
+                    tremorParam: 0,
+                    arpPos: 0,
+                    noteDelay: -1,
+                    vibratoParams: {
+                        waveform: 0,
+                        pos: 0,
+                        depth: 0,
+                        speed: 0
+                    },
+                    tremoloParams: {
+                        waveform: 0,
+                        pos: 0,
+                        depth: 0,
+                        speed: 0
+                    },
+                    patternLoop: {
+                        row: 0,
+                        count: null
+                    },
+                    invertLoop: {
+                        pos: 0,
+                        delay: 0,
+                        sample: null
+                    }
+                }
+            };
+            this.mixer.setPanPosition(i, this.channelState[i].panPos);
+        }
+
+    }
+
+    jssynth_mod.Player.prototype.start = function() {
+        this.playing = true;
+    };
+
+    jssynth_mod.Player.prototype.stop = function() {
+        // stop any further notes from being played
+        this.playing = false;
+
+        // and cut output from all song player related channels
+        for (var chan = 0; chan < this.song.channels; chan++) {
+            this.mixer.cut(chan);
+        }
+    }
+
+    jssynth_mod.Player.prototype.preSampleMix = function(mixer, sampleRate) {
+        if (!this.playing) {
+            return;
+        }
+        var state = this.playerState;
+        var song = this.song;
+        if (state.patternDelay > 0) {
+            state.patternDelay--;
+            this.handleTick(song.patterns[song.orders[state.pos]][state.row], state.tick, sampleRate);
+        } else {
+            if (state.tick == 0) {
+                if (this.stateCallback) {
+                    this.stateCallback(this.playerState, this.channelState);
+                }
+                this.handleDiv(song.patterns[song.orders[state.pos]][state.row], sampleRate);
+            } else {
+                this.handleTick(song.patterns[song.orders[state.pos]][state.row], state.tick, sampleRate);
+            }
+            this.advanceTick();
+        }
+        if (state.tick === 0) {
+            /*
+             * l_jumpToPattern and l_breakToRow are used for pattern loops;
+             * these are processed _before_ normal jump to pattern/row commands
+             */
+            if (state.l_jumpToPattern !== null) {
+                state.jumpToPattern = state.l_jumpToPattern;
+                state.breakToRow = state.l_breakToRow;
+                state.l_jumpToPattern = null;
+                state.l_breakToRow = null;
+            }
+            if (state.jumpToPattern !== null) {
+                state.pos = state.jumpToPattern;
+                state.jumpToPattern = null;
+                if (state.breakToRow !== null) {
+                    state.row = state.breakToRow;
+                    state.breakToRow = null;
+                } else {
+                    state.row = 0;
+                }
+            }
+            if (state.breakToRow !== null) {
+                if (state.row !== 0) {
+                    this.advancePos();
+                }
+                state.row = state.breakToRow;
+                state.breakToRow = null;
+            }
+        }
+        if (this.playerState.filter > 0) {
+            this.mixer.setFilters(AMIGA_FILTERS);
+        } else {
+            this.mixer.setFilters(null);
+        }
+        this.mixer.setGlobalVolume(state.globalVolume);
+        this.mixer.setSecondsPerMix(1 / (state.bpm * 2 / 5));
+    };
+
+    /**
+     * Jump to the next position in the song
+     */
+    jssynth_mod.Player.prototype.nextPos = function() {
+        this.advancePos();
+        this.playerState.row = 0;
+        this.playerState.tick = 0;
+    };
+
+    /**
+     * Jump to the previous position in the song
+     */
+    jssynth_mod.Player.prototype.previousPos = function() {
+        this.decrementPos();
+        this.playerState.row = 0;
+        this.playerState.tick = 0;
+    };
+
+    jssynth_mod.Player.prototype.advancePos = function() {
+        var state = this.playerState;
+        var song = this.song;
+
+        do {
+            state.pos = state.pos + 1;
+        } while (song.orders[state.pos] == 254)
+
+        if (state.pos >= song.songLength || song.orders[state.pos] == 255) {
+            state.pos = 0;
+        }
+    };
+    jssynth_mod.Player.prototype.decrementPos = function() {
+        var state = this.playerState;
+        var song = this.song;
+
+        do {
+            state.pos -= 1;
+        } while (song.orders[state.pos] == 254);
+
+        if (state.pos < 0) {
+            state.pos = song.songLength;
+            do {
+                state.pos -= 1;
+            } while (song.orders[state.pos] == 254);
+        }
+    };
+
+    jssynth_mod.Player.prototype.advanceRow = function() {
+        var state = this.playerState;
+        var song = this.song;
+
+        var numRows = song.patterns[song.orders[state.pos]].length;
+        state.row = state.row + 1;
+
+        if (state.row >= numRows) {
+            var chan;
+            for (chan = 0; chan < song.channels; chan++) {
+                this.channelState[chan].effectState.patternLoop.row = 0;
+            }
+            state.row = 0;
+            this.advancePos();
+        }
+    };
+
+    jssynth_mod.Player.prototype.advanceTick = function() {
+        var state = this.playerState;
+        state.tick += 1;
+        if (state.tick >= state.speed) {
+            state.tick = 0;
+            this.advanceRow();
+        }
+    };
+
+    jssynth_mod.Player.prototype.handleTick = function(row, tick, sampleRate) {
+        for (var chan = 0; chan < this.song.channels; chan++) {
+            var chanState = this.channelState[chan];
+            var effectParameter = chanState.effectParameter;
+            var effectHandler = chanState.effect;
+            var volumeEffectHandler = null, volumeEffectParameter = null;
+            if (row && row[chan] && row[chan].volumeEffect) {
+                volumeEffectHandler = this.effectMap[row[chan].volumeEffect].effect;
+                volumeEffectParameter = row[chan].volumeEffectParameter;
+            }
+            if (volumeEffectHandler) {
+                volumeEffectHandler.tick(this.mixer, chan, volumeEffectParameter, this.playerState, chanState, null, null, this.song);
+            }
+            if (effectHandler) {
+                effectHandler.tick(this.mixer, chan, effectParameter, this.playerState, chanState, null, null, this.song);
+            }
+            var periodToPlay = chanState.period;
+            if (this.playerState.glissandoControl > 0) {
+                var noteNum = jssynth_mod.MOD_PERIOD_TABLE.getNote(periodToPlay);
+                periodToPlay = jssynth_mod.MOD_PERIOD_TABLE.getPeriod(noteNum);
+            }
+            var freqHz = (this.playerState.freq.clock / (periodToPlay * 2)) * chanState.pitchOfs;
+            this.mixer.setFrequency(chan, freqHz);
+            this.mixer.setVolume(chan, chanState.volume);
+        }
+    };
+
+    jssynth_mod.Player.prototype.handleNote = function(chan, note, sampleRate) {
+        var parms = this.channelState[chan];
+        var period = 0;
+        if (note.note > 0 && note.note !== 254) {
+            period = jssynth_mod.MOD_PERIOD_TABLE.getPeriod(note.note);
+        }
+        var sampleNumber = note.sampleNumber - 1;
+        parms.effectParameter = note.parameter;
+        var effectHandler = this.effectMap[note.effect].effect;
+        var volumeEffectHandler = null, volumeEffectParameter = null;
+        if (note.volumeEffect) {
+            volumeEffectHandler = this.effectMap[note.volumeEffect].effect;
+            volumeEffectParameter = note.volumeEffectParameter;
+        }
+        if (!effectHandler && this.loggingEnabled) {
+            console.log("no effect handler for effect "+note.effect.toString(16)+"/"+note.parameter.toString(16));
+        }
+        parms.effect = effectHandler;
+
+        if (sampleNumber >= 0 && this.song.instruments[sampleNumber]) {
+
+            var instrument = this.song.instruments[sampleNumber];
+
+            var noteToPlay = note.note;
+            if (noteToPlay < 0) {
+                noteToPlay = jssynth_mod.MOD_PERIOD_TABLE.getNote(parms.period);
+            }
+            if (noteToPlay > 0) {
+                var sampleNum = instrument.metadata.noteToSampleMap[noteToPlay];
+                var sample = instrument.samples[sampleNum];
+
+                // set sample (& volume)
+                this.mixer.setSample(chan, sample);
+
+                parms.pitchOfs = sample.metadata.pitchOfs || 1;
+                if ((effectHandler && effectHandler.allowVolumeChange === true) || !effectHandler) {
+                    parms.volume = sample.metadata.volume;
+                    parms.lastVolume = sample.metadata.volume;
+                }
+            }
+
+        }
+        if (period > 0) {
+            if ((effectHandler && effectHandler.allowPeriodChange === true) || !effectHandler) {
+                parms.period = period;
+                parms.lastPeriod = period;
+                if ((effectHandler && effectHandler.allowSampleTrigger === true) || !effectHandler) {
+                    this.mixer.setSamplePosition(chan, 0);
+                }
+            }
+        }
+        var volume = note.volume;
+        if (volume >= 0) {
+            if ((effectHandler && effectHandler.allowVolumeChange === true) || !effectHandler) {
+                parms.volume = volume;
+                parms.lastVolume = volume;
+            }
+        }
+        if (note.note === 254) {  // 254 means note off
+            this.mixer.cut(chan);
+        }
+        if (volumeEffectHandler) {
+            volumeEffectHandler.div(this.mixer, chan, volumeEffectParameter, this.playerState, parms, period, note, this.song);
+        }
+        if (effectHandler) {
+            effectHandler.div(this.mixer, chan, parms.effectParameter, this.playerState, parms, period, note, this.song);
+        }
+        var periodToPlay = parms.period;
+        if (this.playerState.glissandoControl > 0) {
+            var noteNum = jssynth_mod.MOD_PERIOD_TABLE.getNote(periodToPlay);
+            periodToPlay = jssynth_mod.MOD_PERIOD_TABLE.getPeriod(noteNum);
+        }
+
+        this.mixer.setVolume(chan, parms.volume);
+        var freqHz = this.playerState.freq.clock / (periodToPlay * 2) * parms.pitchOfs;
+        this.mixer.setFrequency(chan, freqHz);
+
+    };
+
+
+
+    jssynth_mod.Player.prototype.handleDiv = function(row, sampleRate) {
+        if (this.loggingEnabled) {
+            console.log(this.rowToText(row));
+        }
+        for (var chan = 0; chan < this.song.channels; chan++) {
+            var note = row[chan];
+            this.handleNote(chan, note, sampleRate);
+        }
+    };
+
+
+    jssynth_mod.Player.prototype.rowToText = function(row) {
+        var chan, text = "" + ("000"+this.playerState.pos.toString(16)).slice(-3) + "/" + ("00"+this.playerState.row.toString(16)).slice(-2) + ": | ";
+        for (chan = 0; chan < this.song.channels; chan++) {
+            var note = row[chan];
+            if (note.note > 0) {
+                text = text + jssynth_mod.MOD_PERIOD_TABLE.getName(note.note) + " ";
+            } else {
+                text = text + "--- ";
+            }
+            if (note.sampleNumber > 0) {
+                text = text + ("0"+note.sampleNumber.toString(16)).slice(-2) + " ";
+            } else {
+                text = text + "-- ";
+            }
+            if (note.volume > 0) {
+                text = text + ("0"+note.volume.toString(16)).slice(-2) + " ";
+            } else {
+                text = text + "-- ";
+            }
+
+            text = text + this.effectMap[note.effect].code + " ";
+            text = text + ("0"+note.parameter.toString(16)).slice(-2);
+            text = text + " | ";
+        }
+        return text;
+    };
+
+    jssynth_mod.Player.prototype.registerCallback = function(callback) {
+        this.stateCallback = callback;
+    };
+
+
+    /* =========== MOD reader ================= */
+    jssynth_mod.MODTypes = {
+        'M.K.': { key: 'M.K.', channels: 4, instruments: 31 },
+        'M!K!': { key: 'M!K!', channels: 4, instruments: 31 },
+        'FLT4': { key: 'FLT4', channels: 4, instruments: 31 },
+        '4CHN': { key: '4CHN', channels: 4, instruments: 31 },
+        '6CHN': { key: '6CHN', channels: 6, instruments: 31 },
+        'FLT8': { key: 'FLT8', channels: 8, instruments: 31 },
+        '8CHN': { key: '8CHN', channels: 8, instruments: 31 },
+        '16CH': { key: '16CH', channels: 16, instruments: 31 }
+    };
+
+    var EIGHTH_SEMITONE_MULTIPLIER = Math.pow(2, 1/(12*8));
+
+
+    jssynth_mod.readMODfile = function (data) {
+        var readWord = function (ofs) {
+            return (data.charCodeAt(ofs) * 256 + data.charCodeAt(ofs + 1) );
+        };
+        var modType = data.substring(1080, 1084);
+        var modTypeData = jssynth_mod.MODTypes[modType] || { key: 'NOIS', channels: 4, instruments: 15 };
+        var song = {};
+
+        song.name = data.substring(0, 20);
+        song.type = modTypeData.key;
+        song.channels = modTypeData.channels;
+
+        song.effectMap = jssynth_mod.MOD_EFFECT_MAP;
+        var songLengthPos = 20 + (30 * modTypeData.instruments);
+
+        song.songLength = data.charCodeAt(songLengthPos);
+        song.orders = [];
+        var maxPatternNum = 0;
+        for (var i = 0; i < 128; i++) {
+            song.orders[i] = data.charCodeAt(songLengthPos + 2 + i);
+            if (song.orders[i] > maxPatternNum) {
+                maxPatternNum = song.orders[i];
+            }
+        }
+
+        var patternOfs = songLengthPos + 130;
+        if (modTypeData.instruments > 15) {
+            patternOfs += 4;
+        }
+
+        song.patterns = [];
+        for (var i = 0; i <= maxPatternNum; i++) {
+            var pattern = [];
+            var ofs = patternOfs + (64 * 4 * modTypeData.channels * i);
+            var row;
+            for (row = 0; row < 64; row++) {
+                var rowData = [];
+                var chan;
+                for (chan = 0; chan < modTypeData.channels; chan++) {
+                    var note = { };
+                    var chanOfs = ofs + (row * 4 * modTypeData.channels) + chan * 4;
+                    var b1 = data.charCodeAt(chanOfs);
+                    var b2 = data.charCodeAt(chanOfs + 1);
+                    var b3 = data.charCodeAt(chanOfs + 2);
+                    var b4 = data.charCodeAt(chanOfs + 3);
+                    note.sampleNumber = (b1 & 0xf0) + ((b3 & 0xf0) / 16);
+                    var period = (((b1 & 0x0f) * 256) + b2) * 4;
+                    note.note = (period === 0) ? -1 : jssynth_mod.MOD_PERIOD_TABLE.getNote(period);
+                    note.effect = b3 & 0x0f;
+                    note.parameter = b4;
+                    note.volume=-1;
+                    rowData.push(note);
+                }
+                pattern.push(rowData);
+            }
+            song.patterns.push(pattern);
+        }
+
+        var sampleOfs = patternOfs + (64 * 4 * modTypeData.channels * (maxPatternNum + 1));
+
+        var modInstruments = [];
+
+        for (var i = 0; i < modTypeData.instruments; i++) {
+            var insOffset = 20 + 30 * i;
+
+            var sampleLength = readWord(insOffset + 22) * 2;
+            var repeatLength = readWord(insOffset + 28) * 2;
+            var sampleName = data.substring(insOffset, insOffset + 22);
+            var sample = new jssynth_core.Sample(data, {
+                name: sampleName,
+                bits: 8,
+                channels: 1,
+                signed: true,
+                sampleRate: 44100,
+                representedFreq: 44100 * Math.pow(EIGHTH_SEMITONE_MULTIPLIER, jssynth_mod.MOD_FINETUNE_TABLE[data.charCodeAt(insOffset + 24)]),
+                sampleLength: sampleLength,
+                volume: data.charCodeAt(insOffset + 25),
+                repeatType: repeatLength > 2 ? 'REP_NORMAL' : 'NON_REPEATING',
+                repeatStart: readWord(insOffset + 26) * 2,
+                repeatEnd: readWord(insOffset + 26) * 2 + repeatLength
+            }, sampleOfs);
+            sampleOfs += sampleLength;
+
+            modInstruments[i] = new jssynth_core.Instrument({name: sampleName, numSamples: 1}, [sample]);
+        }
+        song.instruments = modInstruments;
+
+        return song;
+    };
+
+
+    return jssynth_mod;
+}));

@@ -1,43 +1,18 @@
-/*
-
- Copyright (c) 2013 David Gundersen
-
- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
- and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in all copies or substantial portions
- of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+/* Thanks Marc @ stackoverflow for this module definition pattern
+ * http://stackoverflow.com/questions/13673346/supporting-both-commonjs-and-amd
  */
-
-/*
- * SAMPLE MIXER and related functionality
- */
-
-(function() {
+(function(name, deps, definition) {
+    if (typeof module != 'undefined') {
+        module.exports = definition();
+    } else if (typeof define == 'function' && typeof define.amd == 'object') {
+        define(name, deps, definition);
+    } else {
+        this[name] = definition();
+    }
+}('jssynth_core', [], function() {
     "use strict";
 
-    window.jssynth = window.jssynth || {};
-
-    /*
-     * Core helper functions for JSynth
-     */
-
-    jssynth.ns = function(name) {
-        var obj = jssynth, i = 0, components = name.split("\.");
-        for (i = 0; i < components.length; i++) {
-            obj[components[i]] = obj[components[i]] || {};
-            obj = obj[components[i]];
-        }
-    };
+    var jssynth = {};
 
     jssynth.clone = function(obj) {
         var newObj = {};
@@ -421,7 +396,7 @@
             var scale = (1 / (numChannels / 2)) * (globalVolume / 64) * (channelVolume / 64);
             var leftScale = scale * panPos.ll;
             var rightScale = scale * panPos.rr;
-            if (sample && sample.data[0] && samplePos >= 0 && samplePosStep > 0) {
+            if (sample && sample.data && samplePos >= 0 && samplePosStep > 0) {
                 var representedFreq = sample.metadata.representedFreq;
                 var sampleSampleRate = sample.metadata.sampleRate;
                 samplePosStep *= sampleSampleRate / representedFreq;
@@ -476,5 +451,84 @@
         return results;
     };
 
-}());
 
+
+
+    /* WEB AUDIO OUTPUT SUPPORT */
+
+    var WA_BUF_SIZE = 2048;
+    var WA_NUM_OUTPUT_CHANNELS = 2;
+
+    /**
+     * Web Audio ("ScriptProcessorNode") audio output functionality
+     * @param mixer A mixer function that gets called periodically to produce new sampled audio data.
+     * @constructor
+     */
+    jssynth.WebAudioOutput = function(mixer, bufferSize) {
+        var self = this;
+
+        if (window.hasOwnProperty('webkitAudioContext') && !window.hasOwnProperty('AudioContext')) {
+            window.AudioContext = window.webkitAudioContext;
+        }
+
+        if(window.hasOwnProperty('AudioContext')) {
+            this.context = new AudioContext();
+            this.mode = 'MODE_WEBKIT';
+            this.node = this.context.createScriptProcessor(bufferSize || WA_BUF_SIZE, 0, WA_NUM_OUTPUT_CHANNELS);
+
+            this.nextSamples = null;
+            this.nextSamplesOffset = 0;
+
+
+
+            var processSamples = function(event) {
+                var outputBuffer = event.outputBuffer;
+                var sampleRate = outputBuffer.sampleRate;
+                var bufferLength = outputBuffer.length;
+                var channelData = [ outputBuffer.getChannelData(0), outputBuffer.getChannelData(1) ];
+                var i = null;
+                var outputOfs = 0;
+
+                while (outputOfs < bufferLength) {
+                    if (!self.nextSamples) {
+                        self.nextSamples = mixer.mix(sampleRate);
+                        self.nextSamplesOffset = 0;
+                    }
+
+                    for (var chan = 0; chan < WA_NUM_OUTPUT_CHANNELS; chan++) {
+                        for (i = 0; ((self.nextSamplesOffset+i) < self.nextSamples.bufferSize) && ((i + outputOfs) < bufferLength); i++) {
+                            channelData[chan][outputOfs+i] = self.nextSamples.output[chan][self.nextSamplesOffset + i];
+                        }
+                    }
+                    outputOfs += i;
+                    self.nextSamplesOffset += i;
+
+                    if (self.nextSamplesOffset >= self.nextSamples.bufferSize) {
+                        self.nextSamples = null;
+                    }
+                }
+            };
+
+//            this.node.onaudioprocess = processSamples;
+
+        }
+
+        /**
+         * Start the audio output
+         */
+        jssynth.WebAudioOutput.prototype.start = function() {
+            self.node.connect(self.context.destination);
+            this.node.onaudioprocess = processSamples;
+        };
+
+        /**
+         * Stop/pause the audio output
+         */
+        jssynth.WebAudioOutput.prototype.stop = function() {
+            self.node.disconnect();
+            this.node.onaudioprocess = undefined;
+        };
+    }
+
+    return jssynth;
+}));
