@@ -22,7 +22,8 @@ body {
     font-family:arial;
     font-size:15px;
     font-weight:bold;
-    padding:6px 24px;
+    padding:0px 10px;
+    margin: 1px;
     text-decoration:none;
     text-shadow:1px 1px 0px #ffffff;
 }.button:hover {
@@ -30,10 +31,10 @@ body {
      background:-moz-linear-gradient( center top, #dfdfdf 5%, #ededed 100% );
      filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#dfdfdf', endColorstr='#ededed');
      background-color:#dfdfdf;
-}.button:active {
+ }.button:active {
       position:relative;
       top:1px;
-}
+  }
 div.titlebar {
     font-size: 40px;
     font-weight: bold;
@@ -47,26 +48,35 @@ div.titlebar {
 div.row {
     display: block;
 }
-div.songDetails {
+.songDetails {
     border-radius: 10px;
-    margin: 20px;
+    margin: 5px;
     width: 500px;
     display: inline-block;
+    float: left;
 }
-div.playerDetails {
-    margin: 20px;
+.playerDetails {
+    margin: 5px;
     border-radius: 10px;
     width: 350px;
     display: inline-block;
+    float: left;
+}
+.controlsRow {
+    float: left;
+    clear: both;
+}
+.clear {
+    clear: both;
 }
 div.controls {
     display: inline-block;
-    width: 200px;
-    margin: 20px;
+    margin: 5px;
 }
 div.header,div.value {
     display: inline-block;
-    padding: 5px;
+    padding: 1px;
+    font-size: 12px;
 }
 div.header {
     font-weight: bold;
@@ -78,7 +88,7 @@ div.value {
     color: #444;
 }
 .hidden {
-   display:none;
+    display:none;
 }
 
 div.song-pattern-container {
