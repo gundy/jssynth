@@ -333,7 +333,7 @@
         }),
         MOD_PT_SET_VIBRATO_WAVEFORM: jssynth_core.merge(TEMPLATE_EFFECT, {
             div:function(mixer, chan, param, playerState, channelState) {
-                channelState.effectParams.vibratoParams.waveform = param & 0x07;
+                channelState.effectState.vibratoParams.waveform = param & 0x07;
             }
         }),
         MOD_PT_SET_FINETUNE: jssynth_core.merge(TEMPLATE_EFFECT, {
