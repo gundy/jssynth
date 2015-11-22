@@ -3,48 +3,47 @@ jssynth
 
 JSSynth is a pure JavaScript library for dealing with sampled and synthesised digital audio.
 
-It currently comprises a mixer component and an integration layer to output sampled audio via
-the web audio API as supported in later versions of Chrome (and hopefully other browsers soon too).
+It comprises a mixer component and an integration layer to output sampled audio via
+the web audio API, as supported in most modern browsers.
 
 Here's an example of using the mixer to whet your appetite:
 
 ```JavaScript
-    var sample = new jssynth_core.Sample(.....);
-    var mixer = new jssynth_core.Mixer({ numChannels: 8, volume: 64 }); /* initialise the mixer */
-    var audioOut = new jssynth_core.WebAudioOutput(mixer);             /* initialise web audio API w/ mixer */
-    audioOut.start();                                             /* start audio mixing / playing */
+    var sample = new Sample(.....);
+    var mixer = new Mixer({ numChannels: 8, volume: 64 });  /* initialise the mixer */
+    var audioOut = new WebAudioOutput(mixer);               /* initialise web audio API w/ mixer */
+    audioOut.start();                                       /* start audio mixing / playing */
+  
+    /*
+     * at this time audio output has started, mixer.mix() is being called in the background
+     * to fill the audio buffers (it's triggered by the web audio layer), and user code
+     * is able to start triggering samples, eg.
+     */
     
-    /* trigger a sample */
     mixer.triggerSample(0, sample, 440);                        /* play sample, channel 0 @ A440 */
 ```
 
 Samples can be either function-based (ie. fully synthetic), or pre-canned sampled digital audio.  
-JSSynth is able to read 8/16/24-bit signed/unsigned mono/stereo samples if required.
+JSSynth is able to interpret and playback 8/16/24-bit, signed/unsigned, mono/stereo samples if required.
 
-One of the demos bundled with JSSynth is a pure JavaScript implementation of a .MOD/.S3M file
+In order to allow accurate timing, JSSynth provides a "secondsPerMix" property, which sets
+how many seconds worth of audio data JSSynth will generate in each call to the Mixer.mix() method.
+
+The WebAudioDriver interface allows user-code to register a pre-mix callback.  This means that your
+code can be notified whenever another x seconds worth of audio data is about to be requested, and
+perform whatever updates to the audio state that you need to.  This is very useful for creating 
+applications like synthesised audio players.
+
+After calling the pre-mix callback, WebAudioDriver will call Mixer.mix() to generate the next
+batch of samples for playback.
+
+Please look at my other projects for an example of a pure JavaScript implementation of a .MOD/.S3M file
 player that has been built on top of the JSSynth API.  This should help to give an idea of what
 might be possible.  
-
-```JavaScript
-        var song = jssynth_mod.readMODfile(moduleData);
-        var mixer = new jssynth_core.Mixer({numChannels: 8 /* 4 for music, 4 for effects */ });
-        var player = new jssynth_mod.Player(this.mixer);
-        player.setSong(this.song);
-        var audioOut = new jssynth_core.WebAudioOutput(this.mixer, 4096);  /* 4096/8192/.. = buffer size */
-        audioOut.start();
-
-        // ...
-
-        mixer.triggerSample(4, sample, 8000); /* trigger a sample (music is still playing) */
-
-        // ...
-```
 
 Games, demos, interactive UI's, DSP related apps or prototypes, the sky is the limit.
 
 ... and that's all there is to it really.
 
-If you use JSSynth or any of the bundled example code in any projects, please drop by and let 
-us know.
-
-BTW, I apologise profusely for the UI in the demos.  Enough said.
+If you use JSSynth or any of the related example code in any projects, please drop by and let 
+me know.
