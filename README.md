@@ -11,7 +11,7 @@ Here's an example of using the mixer to whet your appetite:
 ```JavaScript
     var sample = new Sample(.....);
     var mixer = new Mixer({ numChannels: 8, volume: 64 });  /* initialise the mixer */
-    var audioOut = new WebAudioOutput(mixer);               /* initialise web audio API w/ mixer */
+    var audioOut = new WebAudioDriver(mixer);               /* initialise web audio API w/ mixer */
     audioOut.start();                                       /* start audio mixing / playing */
   
     /*
