@@ -3,7 +3,7 @@
   "repository": "http://github.com/gundy/jssynth",
   "registry": "jspm",
   "version": "0.1.0",
-  "main": "lib/index",
+  "main": "lib/jssynth",
   "jspm": {
     "format": "es6",
     "devDependencies": {
