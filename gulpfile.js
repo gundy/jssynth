@@ -25,7 +25,7 @@ gulp.task('link', function(cb) {
 });
 
 gulp.task('bundle-watch', function(cb) {
-    watch(['lib/**/*'], shell.task(['jspm bundle lib/jssynth.js dist/jssynth.js', 'jspm bundle lib/jssynth.js dist/jssynth.min.js --minify']));
+    watch(['lib/**/*'], shell.task(['jspm bundle lib/jssynth-mod.js dist/jssynth-mod.js', 'jspm bundle lib/jssynth-mod.js dist/jssynth-mod.min.js --minify']));
 });
 
-gulp.task('bundle-now', shell.task(['jspm bundle lib/jssynth.js dist/jssynth.js', 'jspm bundle lib/jssynth.js dist/jssynth.min.js --minify']));
+gulp.task('bundle-now', shell.task(['jspm bundle lib/jssynth-mod.js dist/jssynth-mod.js', 'jspm bundle lib/jssynth-mod.js dist/jssynth-mod.min.js --minify']));
