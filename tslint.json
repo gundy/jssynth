@@ -1,0 +1,31 @@
+{
+  "extends": "tslint:recommended",
+  "rules": {
+    "max-line-length": {
+      "options": [
+        120
+      ]
+    },
+    "semicolon": [ true, "never" ],
+    "indent": [
+      true,
+      "tabs",
+      4
+    ],
+    "ordered-imports": false,
+    "interface-name": false,
+    "object-literal-sort-keys": false,
+    "trailing-comma": false,
+    "prefer-for-of": false,
+    "no-bitwise": false,
+    "no-empty": false,
+    "only-arrow-functions": false
+  },
+  "jsRules": {
+    "max-line-length": {
+      "options": [
+        120
+      ]
+    }
+  }
+}

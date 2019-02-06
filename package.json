@@ -1,33 +1,33 @@
 {
-  "name": "jssynth",
+  "name": "@gundy/jssynth",
+  "author": "David Gundersen",
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "repository": "http://github.com/gundy/jssynth",
-  "registry": "jspm",
-  "version": "0.1.0",
-  "main": "lib/jssynth",
-  "jspm": {
-    "format": "es6",
-    "devDependencies": {
-      "babel": "npm:babel-core@^5.1.13",
-      "babel-runtime": "npm:babel-runtime@^5.1.13",
-      "core-js": "npm:core-js@^0.9.4"
-    }
+  "version": "0.2.1",
+  "main": "dist/jssynth.cjs.js",
+  "module": "dist/jssynth.es.js",
+  "standalone": "dist/jssynth.standalone.es.js",
+  "files": [
+    "dist"
+  ],
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rollup -c",
+    "watch": "rollup -cw",
+    "unit-tests": "ts-node -O '{ \"module\": \"commonjs\" }' ./test/runner.ts",
+    "lint": "tslint -p ."
   },
   "devDependencies": {
-    "chai": "^1.10.0",
-    "gulp": "^3.8.10",
-    "gulp-bump": "^0.1.11",
-    "gulp-shell": "^0.2.11",
-    "gulp-watch": "^3.0.0",
-    "karma": "^0.13.15",
-    "karma-chai": "^0.1.0",
-    "karma-chrome-launcher": "^0.1.12",
-    "karma-jspm": "^1.1.1",
-    "karma-mocha": "^0.1.10",
-    "karma-mocha-reporter": "^0.2.2",
-    "karma-sauce-launcher": "^0.2.10",
-    "karma-sinon": "^1.0.4",
-    "mocha": "^2.1.0",
-    "semver": "^4.2.0",
-    "sinon": "^1.12.2"
+    "alsatian": "^2.3.0",
+    "rollup": "^1.1.2",
+    "rollup-plugin-typescript2": "^0.19.2",
+    "ts-node": "^7.0.1",
+    "tslint": "^5.12.0",
+    "typescript": "^3.2.2",
+    "typescript-tslint-plugin": "^0.2.1"
   }
 }

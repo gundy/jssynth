@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "jsx": "react",
+    "target": "es5",
+    "lib": [
+      "es6",
+      "dom"
+    ],
+    "declaration": true,
+    "noImplicitAny": false,
+    "experimentalDecorators": true,
+    "preserveConstEnums": true,
+    "module": "es2015",
+    "outDir": "build",
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "rootDir": "src",
+    "moduleResolution": "node",
+    "noUnusedLocals": true,
+    "plugins": [
+      {
+        "name": "typescript-tslint-plugin",
+        "configFile": "./tslint.json"
+      }
+    ]
+  },
+  "exclude": [
+    "node_modules"
+  ],
+  "files": [
+    "src/index.ts"
+  ],
+  "compileOnSave": false
+}
