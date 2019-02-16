@@ -1,4 +1,4 @@
-import { Mixer } from "../src"
+import { Mixer } from "../src/Mixer"
 import { Expect, Test } from "alsatian"
 
 export class MixerTestFixture {
