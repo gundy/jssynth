@@ -18,6 +18,7 @@
 </p>
 <script src="../dist/jssynth.standalone.es.js"></script>
 <script src="./2ND_PM.s3m.js"></script>
+<script src="./entity.mod.js"></script>
 
 <script type="application/javascript">
     function initAudio() {
@@ -28,8 +29,8 @@
         mixer = new jssynth.Mixer({ numChannels: 8, volume: 64 });
         audioOut = new jssynth.WebAudioDriver(mixer, 4096);
         player = new jssynth.Player(mixer);
-        // loader = new MODLoader();
-        // parsedSong = loader.loadSong(mod_song);
+        // loader = new jssynth.MODLoader();
+        // parsedSong = loader.loadSong(entity_mod);
         loader = new jssynth.S3MLoader();
         parsedSong = loader.loadSong(second_pm_s3m);
 

@@ -18,7 +18,7 @@
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -cw",
-    "unit-tests": "ts-node -O '{ \"module\": \"commonjs\" }' ./test/runner.ts",
+    "test": "ts-node -O '{ \"module\": \"commonjs\" }' ./test/runner.ts",
     "lint": "tslint -p ."
   },
   "devDependencies": {
