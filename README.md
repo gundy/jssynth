@@ -1,6 +1,9 @@
 jssynth
 =======
 
+[![Build Status](https://travis-ci.org/gundy/jssynth.svg?branch=master)](https://travis-ci.org/gundy/jssynth)
+
+
 JSSynth is a pure JavaScript (TypeScript) library for dealing with sampled and synthesised digital audio.
 
 It comprises a mixer component and an integration layer to output sampled audio via
