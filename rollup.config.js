@@ -1,6 +1,7 @@
 import typescript from 'rollup-plugin-typescript2'
 
 import pkg from './package.json'
+import {terser} from 'rollup-plugin-terser';
 
 export default [{
   input: 'src/index.ts',
@@ -22,6 +23,7 @@ export default [{
   plugins: [
     typescript({
       typescript: require('typescript'),
+   	  objectHashIgnoreUnknownHack: true
     }),
   ],
 },
@@ -33,7 +35,13 @@ export default [{
       {
         file: pkg.standalone,
         format: 'iife',
-      }
+      },
+	{
+		file: pkg.standalone_min,
+		format: 'iife',
+		name: 'jssynth',
+		plugins: [terser()]
+	}
     ],
     external: [
       ...Object.keys(pkg.dependencies || {}),
@@ -43,7 +51,8 @@ export default [{
     plugins: [
       typescript({
         typescript: require('typescript'),
-      }),
+	    objectHashIgnoreUnknownHack: true
+ 	  }),
     ],
   },
 

@@ -44,7 +44,7 @@ export interface PlayerChannelState {
   lastPeriod: number,  /* last officially set period - base period for vibrato */
   effect: Effect,
   effectParameter: number,
-  volumeEnvelopeSequence: Iterator<number>,
+  volumeEnvelopeSequence: Generator<number, void, boolean>,
   hasCut: boolean,
   sample: Sample,
   effectState: {
@@ -357,7 +357,7 @@ export class Player {
       let freqHz = (this.playerState.freq.clock / (periodToPlay * 2)) * chanState.pitchOfs;
       this.mixer.setFrequency(chan, freqHz);
       let hasCut = chanState.hasCut;
-      let volumeEnvelopeValue = chanState.volumeEnvelopeSequence.next(hasCut).value;
+      let volumeEnvelopeValue = chanState.volumeEnvelopeSequence.next(hasCut).value || 0;
       //if (chanState.hasCut) {
       //	console.log("Cut vol env seq on channel "+chan);
       //}
@@ -452,7 +452,7 @@ export class Player {
       periodToPlay = MOD_PERIOD_TABLE.getPeriod(noteNum);
     }
     let hasCut = parms.hasCut;
-    let volumeEnvelopeValue = parms.volumeEnvelopeSequence.next(hasCut).value;
+    let volumeEnvelopeValue = parms.volumeEnvelopeSequence.next(hasCut).value || 0;
 
     this.mixer.setVolume(chan, parms.volume * (volumeEnvelopeValue / 64));
     let freqHz = this.playerState.freq.clock / (periodToPlay * 2) * parms.pitchOfs;
