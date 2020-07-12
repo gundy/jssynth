@@ -7,7 +7,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "repository": "http://github.com/gundy/jssynth",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "main": "dist/jssynth.cjs.js",
   "module": "dist/jssynth.es.js",
   "standalone": "dist/jssynth.standalone.es.js",
