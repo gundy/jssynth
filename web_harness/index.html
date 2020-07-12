@@ -1,13 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>jssynth MOD player testbench</title>
 </head>
 <body>
 
-<h1>JSSynth Hello World</h1>
-<p>Haven't you heard?  Raw, un-styled web pages are back in vogue.</p>
-<p>This one provides a simple demonstration of jssynth, and it's ability to play Amiga MOD files,
+<h1>JSSynth S3M player hello world</h1>
+<p>This page provides a simple demonstration of jssynth, and it's ability to play Amiga MOD / S3M files,
    while also playing sound effects, or other generated noises.</p>
 <p>To use the demo, first click "Initialise Audio", then you can use the "Start"/"Stop" buttons to
     start/stop music playback by enabling/disabling the browser's web audio callbacks.</p>
@@ -16,7 +15,7 @@
     <button onclick="startPlaying()">Start</button>
     <button onclick="stopPlaying()">Stop</button>
 </p>
-<script src="../dist/jssynth.standalone.es.js"></script>
+<script src="../dist/jssynth.standalone.es.min.js"></script>
 <script src="./2ND_PM.s3m.js"></script>
 <script src="./entity.mod.js"></script>
 
@@ -29,8 +28,8 @@
         mixer = new jssynth.Mixer({ numChannels: 8, volume: 64 });
         audioOut = new jssynth.WebAudioDriver(mixer, 4096);
         player = new jssynth.Player(mixer);
-        // loader = new jssynth.MODLoader();
-        // parsedSong = loader.loadSong(entity_mod);
+        //loader = new jssynth.MODLoader();
+        //parsedSong = loader.loadSong(entity_mod);
         loader = new jssynth.S3MLoader();
         parsedSong = loader.loadSong(second_pm_s3m);
 

@@ -7,10 +7,11 @@
     "registry": "https://registry.npmjs.org/"
   },
   "repository": "http://github.com/gundy/jssynth",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "main": "dist/jssynth.cjs.js",
   "module": "dist/jssynth.es.js",
   "standalone": "dist/jssynth.standalone.es.js",
+  "standalone_min": "dist/jssynth.standalone.es.min.js",
   "files": [
     "dist"
   ],
@@ -19,15 +20,17 @@
     "build": "rollup -c",
     "watch": "rollup -cw",
     "test": "ts-node -O '{ \"module\": \"commonjs\" }' ./test/runner.ts",
-    "lint": "tslint -p ."
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "devDependencies": {
-    "alsatian": "^2.3.0",
-    "rollup": "^1.1.2",
+    "@typescript-eslint/eslint-plugin": "^3.6.0",
+    "@typescript-eslint/parser": "^3.6.0",
+    "alsatian": "^3.2.1",
+    "eslint": "7.3.1",
+    "rollup": "^2.21.0",
+    "rollup-plugin-terser": "^6.1.0",
     "rollup-plugin-typescript2": "^0.19.2",
-    "ts-node": "^7.0.1",
-    "tslint": "^5.12.0",
-    "typescript": "^3.2.2",
-    "typescript-tslint-plugin": "^0.2.1"
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.6"
   }
 }

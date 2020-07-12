@@ -1,6 +1,6 @@
 import { Instrument } from "./Instrument"
 import { Mixer } from "./Mixer"
-import { MODLoader } from "./formats/mod/ModLoader"
+import { MODLoader } from "./formats/mod/MODLoader"
 import { S3MLoader } from "./formats/s3m/S3MLoader"
 import { Player } from "./Player"
 import { Sample } from "./Sample"
