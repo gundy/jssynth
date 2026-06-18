@@ -1,5 +1,5 @@
 import { Song } from './Song';
 
 export interface Loader {
-  loadSong(data: string): Song
+  loadSong(data: ArrayBuffer): Song
 }

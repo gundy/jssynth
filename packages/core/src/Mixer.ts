@@ -263,7 +263,7 @@ export class Mixer {
 		for (chan = 0; chan < numChannels; chan++) {
 			let state = this.channelState[chan]
 			if (!state.enabled) {
-				break
+				continue  /* skip just this channel — a disabled channel must not stop later channels mixing */
 			}
 
 			let panPos = this.calculatePanMatrix(state.panPos)

@@ -29,8 +29,18 @@ class EffectModProtrackerInvertLoop extends AbstractEffect {
         channelState.effectState.invertLoop.pos = 0;
       }
 
-      currentSample.data[currentSample.metadata.repeatStart+channelState.effectState.invertLoop.pos] =
-        (0 - currentSample.data[currentSample.metadata.repeatStart+channelState.effectState.invertLoop.pos]);
+      /*
+       * KNOWN LATENT BUG (preserved bit-exactly in M2, do not "fix" here):
+       * sample.data is channel-major (Float32Array per channel), but this indexes
+       * it as if it were a flat number[]. So this has never actually inverted
+       * sample bytes — it's effectively a no-op. Correcting it (data[0][idx]) would
+       * change how EFx "invert loop" songs sound, which is a deliberate audio change
+       * for a later effects pass, not this refactor. The cast keeps the original
+       * runtime behaviour exactly while satisfying the corrected Float32Array[] type.
+       */
+      const flatData = currentSample.data as unknown as number[];
+      const invertIdx = currentSample.metadata.repeatStart + channelState.effectState.invertLoop.pos;
+      flatData[invertIdx] = (0 - flatData[invertIdx]);
     }
   }
 }
