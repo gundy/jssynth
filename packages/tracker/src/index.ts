@@ -9,7 +9,12 @@ export { MODLoader } from './formats/mod/MODLoader'
 export { S3MLoader } from './formats/s3m/S3MLoader'
 
 export { effectMapForType } from './formats/effectMaps'
+export { MOD_PERIOD_TABLE } from './formats/mod/MOD_PERIOD_TABLE'
 
 export type { Loader } from './formats/Loader'
 export type { Song } from './formats/Song'
+export type { Pattern } from './formats/Pattern'
+export type { PatternRow } from './formats/PatternRow'
+export type { PatternNote } from './formats/PatternNote'
+export type { EffectMapEntry } from './formats/Effect'
 export { createBlankSong, FREQ_PAL, FREQ_NTSC } from './formats/Song'
