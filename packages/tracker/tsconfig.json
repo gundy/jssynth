@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src"],
+  "//": "XM support is half-finished and has latent type errors; it is detached from the public API (not exported from index.ts). Excluded until M2 stubs/repairs it — see docs/MODERNIZATION_PLAN.md.",
+  "exclude": ["src/formats/xm"]
+}

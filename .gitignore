@@ -1,8 +1,7 @@
 node_modules
-jspm_packages
 .idea
 *.iml
 .DS_Store
-web
-dist/*
-.rpt2_cache/
+dist
+.turbo
+*.tsbuildinfo
