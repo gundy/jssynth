@@ -1,6 +1,6 @@
 {
   "name": "@gundy/jssynth-tracker",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "MOD/S3M tracker player built on @gundy/jssynth-core",
   "author": "David Gundersen",
   "license": "MIT",

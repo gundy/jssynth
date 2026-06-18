@@ -1,6 +1,6 @@
 {
   "name": "@gundy/jssynth-core",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "Pure DSP sample-playback engine (Mixer, Sample) — no DOM or Web Audio dependency",
   "author": "David Gundersen",
   "license": "MIT",

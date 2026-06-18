@@ -1,6 +1,6 @@
 {
   "name": "@gundy/jssynth-harness",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Demo / testbench for the jssynth engine",
   "type": "module",

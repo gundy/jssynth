@@ -1,6 +1,6 @@
 {
   "name": "@gundy/jssynth-web-audio",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "AudioWorklet runtime for jssynth — runs the Player + Mixer on the audio render thread",
   "author": "David Gundersen",
   "license": "MIT",
