@@ -1,7 +1,7 @@
 {
   "name": "@gundy/jssynth-web-audio",
   "version": "0.3.0",
-  "description": "Web Audio output driver for @gundy/jssynth-core (interim ScriptProcessorNode; AudioWorklet in M3)",
+  "description": "AudioWorklet runtime for jssynth — runs the Player + Mixer on the audio render thread",
   "author": "David Gundersen",
   "license": "MIT",
   "type": "module",
@@ -17,14 +17,18 @@
   },
   "files": ["dist"],
   "scripts": {
-    "build": "tsup",
+    "build": "node scripts/build-worklet.mjs && tsup",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@gundy/jssynth-core": "workspace:*"
+    "@gundy/jssynth-core": "workspace:*",
+    "@gundy/jssynth-tracker": "workspace:*"
   },
   "devDependencies": {
+    "esbuild": "^0.24.2",
     "tsup": "^8.3.5",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
   }
 }

@@ -5,3 +5,6 @@ node_modules
 dist
 .turbo
 *.tsbuildinfo
+
+# Generated worklet bundle (emitted by web-audio build; .d.ts is committed)
+packages/web-audio/src/generated/processorSource.js

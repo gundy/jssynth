@@ -1,10 +1,5 @@
-import { Mixer } from '@gundy/jssynth-core'
-import { WebAudioDriver } from '@gundy/jssynth-web-audio'
-import { Player, S3MLoader, MODLoader, type Loader } from '@gundy/jssynth-tracker'
-
-let mixer: Mixer
-let audioOut: WebAudioDriver
-let player: Player
+import { S3MLoader, MODLoader, type Loader } from '@gundy/jssynth-tracker'
+import { JssynthAudio } from '@gundy/jssynth-web-audio'
 
 // Switch SONG / LOADER here to try the MOD path instead of S3M.
 const SONG_URL = 'songs/2ND_PM.s3m'
@@ -13,23 +8,34 @@ const makeLoader = (): Loader => new S3MLoader()
 // const makeLoader = (): Loader => new MODLoader()
 void MODLoader // keep the MOD path referenced for easy switching
 
+let audio: JssynthAudio | null = null
+
+const status = document.querySelector<HTMLPreElement>('#status')!
+
 async function initAudio() {
-  mixer = new Mixer({ numChannels: 8, volume: 64 })
-  audioOut = new WebAudioDriver(mixer, 4096)
-  player = new Player(mixer)
+  audio = await JssynthAudio.create()
 
   const data = await fetch(SONG_URL).then((r) => r.arrayBuffer())
-  player.setSong(makeLoader().loadSong(data))
+  audio.load(makeLoader().loadSong(data))
+
+  // The visualizer seam: pattern/row state, streamed from the audio thread.
+  audio.on('state', (e) => {
+    status.textContent =
+      `pos ${e.pos}  row ${String(e.row).padStart(2, '0')}  ` +
+      `bpm ${e.bpm}  spd ${e.speed}  frame ${e.frame}`
+  })
+
+  status.textContent = 'loaded — press Start'
 }
 
-function startPlaying() {
-  audioOut?.start()
+async function startPlaying() {
+  await audio?.start()
 }
 
 function stopPlaying() {
-  audioOut?.stop()
+  audio?.stop()
 }
 
 document.querySelector<HTMLButtonElement>('#init')!.addEventListener('click', () => void initAudio())
-document.querySelector<HTMLButtonElement>('#start')!.addEventListener('click', startPlaying)
+document.querySelector<HTMLButtonElement>('#start')!.addEventListener('click', () => void startPlaying())
 document.querySelector<HTMLButtonElement>('#stop')!.addEventListener('click', stopPlaying)
