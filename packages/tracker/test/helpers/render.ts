@@ -23,8 +23,8 @@ export interface RenderResult {
 }
 
 /**
- * Deterministic offline render: drives the Player through the Mixer exactly the
- * way the WebAudioDriver would, but synchronously and for a fixed duration.
+ * Deterministic offline render: drives the Player through the Mixer the same way
+ * the AudioWorklet runtime does, but synchronously and for a fixed duration.
  */
 export function renderSong(
   song: Song,

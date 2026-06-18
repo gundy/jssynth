@@ -1,86 +1,85 @@
-jssynth
-=======
+# jssynth
 
-[![Build Status](https://travis-ci.org/gundy/jssynth.svg?branch=master)](https://travis-ci.org/gundy/jssynth)
+[![CI](https://github.com/gundy/jssynth/actions/workflows/ci.yml/badge.svg)](https://github.com/gundy/jssynth/actions/workflows/ci.yml)
 
+A pure-TypeScript audio engine for the web: a sample-playback **mixer** plus an Amiga
+**MOD / S3M tracker player**, running on an **AudioWorklet** for sample-exact timing and
+low-latency sample triggering.
 
-JSSynth is a pure JavaScript (TypeScript) library for dealing with sampled and synthesised digital audio.
+Originally written when the Web Audio API's `ScriptProcessorNode` first landed, with the goal of
+triggering near-real-time sound effects in JavaScript while also playing tracker music. It has since
+been modernised into a pnpm + Turborepo monorepo, with the synthesis moved onto the audio render
+thread.
 
-It comprises a mixer component and an integration layer to output sampled audio via
-the web audio API, as supported in most modern browsers.
+## Packages
 
-Port to TypeScript
-==================
+| Package | What it is |
+| --- | --- |
+| [`@gundy/jssynth-core`](packages/core) | Pure DSP — `Mixer`, `Sample`, `Filter`. No DOM / Web Audio dependency; runs in Node, the browser, or an AudioWorklet. |
+| [`@gundy/jssynth-tracker`](packages/tracker) | The tracker `Player`, MOD/S3M loaders, and effect handlers. Depends on core. |
+| [`@gundy/jssynth-web-audio`](packages/web-audio) | `JssynthAudio` — the browser runtime; runs the Player + Mixer inside an AudioWorklet. |
 
-Notes on TypeScript conversion:
+Apps (not published):
 
-This version of jssynth has been ported to TypeScript. The project now requires the following tools:
+- [`apps/harness`](apps/harness) — a minimal playback testbench.
+- [`apps/visualizer`](apps/visualizer) — a React app showing scrolling tracker patterns, driven live
+  by the worklet's playback-state stream.
 
-NodeJS environment: use Nodenv (not NVM)
-Build tool: Yarn (not NPM, easiest to install via npm install -g yarn)
-Test tool: Alsatian (run tests with `yarn run unit-tests`)
+## Quick start
 
-Dev setup steps:
-================
-
-1. checkout this project and cd into it
-2. Make sure nodenv is installed 
-3. `npm install -g yarn` # Installs yarn globally for current node version
-4. `nodenv rehash` # Tells nodenv to make the new yarn command available
-5. `yarn` # Installs all packages
-6. `yarn unit-tests` # Runs the unit tests
-7. `yarn build` # Builds the project
-8. `yarn package` # Generates a release package
-
-IDE:
-====
-Recommend using Visual Studio Code with "TypeScript TSLint Plugin"
-
-Example:
-========
-
-Here's an example of using the Amiga MOD file player to whet your appetite:
-
-```JavaScript
-    mixer = new jssynth.Mixer({ numChannels: 8, volume: 64 });
-    audioOut = new jssynth.WebAudioDriver(mixer, 4096);
-    player = new jssynth.Player(mixer);
-    loader = new jssynth.S3MLoader();
-    parsedSong = loader.loadSong(second_pm_s3m);
-
-    player.setSong(parsedSong);
-    audioOut.start();
-
-    /*
-     * at this time audio output has started, mixer.mix() is being called in the background
-     * to fill the audio buffers (it's triggered by the web audio layer), and user code
-     * is able to start triggering samples too, eg.
-     */
-    
-    mixer.triggerSample(0, sample, 440);                        /* play sample, channel 0 @ A440 */
+```bash
+corepack enable        # provides pnpm (see packageManager in package.json)
+pnpm install
+pnpm build
+pnpm --filter @gundy/jssynth-visualizer dev    # or: @gundy/jssynth-harness
 ```
 
-Samples can be either function-based (ie. fully synthetic), or pre-canned sampled digital audio.  
-JSSynth is able to interpret and playback 8/16/24-bit, signed/unsigned, mono/stereo samples if required.
+## Usage
 
-In order to allow accurate timing, JSSynth provides a "secondsPerMix" property, which sets
-how many seconds worth of audio data JSSynth will generate in each call to the Mixer.mix() method.
+```ts
+import { S3MLoader } from '@gundy/jssynth-tracker'
+import { JssynthAudio } from '@gundy/jssynth-web-audio'
 
-The WebAudioDriver interface allows user-code to register a pre-mix callback.  This means that your
-code can be notified whenever another x seconds worth of audio data is about to be requested, and
-perform whatever updates to the audio state that you need to.  This is very useful for creating 
-applications like synthesised audio players.
+const audio = await JssynthAudio.create()
 
-After calling the pre-mix callback, WebAudioDriver will call Mixer.mix() to generate the next
-batch of samples for playback.
+const data = await fetch('/song.s3m').then((r) => r.arrayBuffer())
+audio.load(new S3MLoader().loadSong(data))
 
-Please look at my other projects for an example of a pure JavaScript implementation of a .MOD/.S3M file
-player that has been built on top of the JSSynth API.  This should help to give an idea of what
-might be possible.  
+audio.on('state', (e) => console.log(`pos ${e.pos}  row ${e.row}`)) // visualizer hook
+await audio.start() // call from a user gesture (autoplay policy)
 
-Games, demos, interactive UI's, DSP related apps or prototypes, the sky is the limit.
+// Low-latency sample triggering — for games, drum machines, UI sfx, ...
+audio.trigger(channel, sample, freqHz) // heard within ~1 render quantum (~2.7 ms)
+```
 
-... and that's all there is to it really.
+Supported formats: **MOD** (ProTracker and common variants) and **S3M** (ScreamTracker 3). XM is
+currently stubbed (not yet supported).
 
-If you use JSSynth or any of the related example code in any projects, please drop by and let 
-me know.
+## How it works
+
+- The `Mixer` produces audio one fixed time-slice at a time; the `Player` sets channel state before
+  each slice. That `secondsPerMix` cadence is what gives tracker playback its sample-exact timing.
+- In the browser, the whole Player + Mixer runs inside an `AudioWorklet`. Each `process()` call fills
+  one 128-frame render quantum, advancing the tracker tick at exact sample boundaries via a sample
+  clock. Sample triggers cross the worklet message port and are applied at the top of the next
+  quantum, so they're heard within ~1 quantum.
+- Playback state (pattern position / row, frame-tagged) streams back to the main thread for
+  visualisation.
+
+See [docs/ARCHITECTURE_NOTES.md](docs/ARCHITECTURE_NOTES.md) for engine internals and
+[docs/MODERNIZATION_PLAN.md](docs/MODERNIZATION_PLAN.md) for the modernization history.
+
+## Development
+
+A pnpm + Turborepo workspace. Requires Node >= 20.
+
+```bash
+pnpm build       # build all packages (Turborepo, dependency-ordered)
+pnpm test        # Vitest across packages
+pnpm typecheck   # tsc --noEmit per package
+pnpm lint        # ESLint (flat config)
+```
+
+## License
+
+[MIT](LICENSE) © David Gundersen

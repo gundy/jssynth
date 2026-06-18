@@ -265,13 +265,19 @@ updating live.
 
 ---
 
-## Milestone M5 — Polish
+## Milestone M5 — Polish ✅ DONE (committed)
 
-- [ ] Per-package `publishConfig`, exports maps, and `.d.ts` outputs; decide which packages publish.
-- [ ] Rewrite `README.md` (current one references Yarn/nodenv/Travis); add per-package READMEs and a
-      worked "drum machine" example exercising low-latency triggering.
-- [ ] GitHub Actions CI (build + test + lint across the workspace) replacing Travis.
-- [ ] Changesets (or similar) for versioning the multiple packages.
+- [x] Per-package `publishConfig` (public) + `repository`; exports maps and `.d.ts` already in place
+      from M1. (Changesets deferred — see below.)
+- [x] Rewrite `README.md` (was Yarn/nodenv/Travis); per-package READMEs for core/tracker/web-audio.
+- [x] GitHub Actions CI (`.github/workflows/ci.yml`: install + build + test + typecheck + lint),
+      replacing Travis; README badge updated.
+- [x] `LICENSE` (MIT) added; last stale refs cleaned (`.editorconfig`, render helper comment).
+
+**Deferred (optional, not blocking):**
+- A worked "drum machine" `trigger()` example / latency demo in the harness.
+- Changesets for multi-package version management (only needed when actually publishing to npm).
+- Prev/next-position + filter-toggle transport in the visualizer (worklet messages).
 
 ---
 

@@ -4,6 +4,10 @@
   "description": "AudioWorklet runtime for jssynth — runs the Player + Mixer on the audio render thread",
   "author": "David Gundersen",
   "license": "MIT",
+  "repository": "https://github.com/gundy/jssynth",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
