@@ -153,7 +153,32 @@ Testing philosophy) is captured at the *start* of M2, before any change, and sti
 
 ---
 
-## Milestone M3 — AudioWorklet migration (Player + Mixer in the worklet)
+## Milestone M3 — AudioWorklet migration (Player + Mixer in the worklet) ✅ DONE (awaiting ear-check before commit)
+
+**Status:** implemented on branch `m1-monorepo-foundation`, **not yet committed** (paused for the
+in-browser ear-check). Full pipeline green; 14 tests incl. a Node integration test that drives the
+worklet processor via a mocked AudioWorkletGlobalScope.
+
+**As-built notes:**
+- **Mixer refactor:** added `mixFrames(outL,outR,offset,count,sampleRate)` (incremental, no callbacks)
+  + `getSecondsPerMix()`; `mix()` now delegates to it. A test proves chunked `mixFrames` is
+  bit-identical to one `mix()` block, and the **golden render stays bit-exact** — the worklet's mixing
+  path is the same validated math.
+- **No float32 *accumulation*** (correcting the M2 plan): accumulation stays float64; only the final
+  store into the worklet's `Float32Array` output truncates — exactly what the old ScriptProcessorNode
+  driver did. So playback is unchanged, and the golden guard stayed strict/bit-exact through M3.
+- **Sample-clock loop** in `JssynthProcessor.process()`: fills each 128-frame quantum, calling
+  `player.preSampleMix` at tick boundaries (which may fall mid-quantum) via a `framesUntilTick`
+  counter. Control messages drained at the top of `process()` → triggers heard within ≤1 quantum.
+- **Song crosses the thread boundary** without its `effectMap` (Effect instances have methods → not
+  cloneable); the worklet restores it via `effectMapForType(song.type)`. Sample `Float32Array`s clone
+  (copied, not transferred — avoids neutering).
+- **Worklet packaging:** `web-audio` now depends on `tracker`; a build step (`scripts/build-worklet.mjs`,
+  esbuild → IIFE) bundles `processor.ts` self-contained and emits it as a string the main bundle loads
+  via a **Blob URL** — zero bundler config for consumers. `WebAudioDriver` (ScriptProcessorNode) removed.
+- **Public API:** `JssynthAudio.create()/.load()/.start()/.stop()/.trigger()/.cut()/.on('state')`;
+  state events carry `{pos,row,tick,bpm,speed,frame,channels}` (the M4 visualizer seam). Harness updated
+  to use it and shows a live pos/row readout.
 
 **Outcome:** all synthesis runs on the audio render thread; trigger and visualization latency
 minimized. This is the milestone that realizes the original "sample-exact" goal properly.

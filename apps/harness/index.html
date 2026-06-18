@@ -6,15 +6,16 @@
   <title>jssynth MOD/S3M player testbench</title>
 </head>
 <body>
-  <h1>JSSynth S3M player — hello world</h1>
-  <p>A simple demonstration of jssynth playing Amiga MOD / S3M files while also being able to
-     trigger sound effects or other generated noises.</p>
-  <p>Click "Initialise Audio", then use Start/Stop to toggle playback.</p>
+  <h1>JSSynth S3M player — AudioWorklet</h1>
+  <p>Plays Amiga MOD / S3M files with the Player + Mixer running on the audio render thread.
+     Click "Initialise Audio", then use Start/Stop. The live readout below is driven by
+     pattern/row state streamed back from the worklet.</p>
   <p>
     <button id="init">Initialise Audio</button>
     <button id="start">Start</button>
     <button id="stop">Stop</button>
   </p>
+  <pre id="status" style="font-size:1.1rem;padding:0.5rem;background:#111;color:#0f0;display:inline-block">idle</pre>
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

@@ -56,6 +56,9 @@ export class Mixer {
 	private postMixCallback: (mixResult: MixResult) => void
 	private postMixObject: any
 	private readonly channelState: MixerChannelState[]  /* channel state array itself is readonly - channels not */
+	/* reusable float64 accumulation scratch for mixFrames() (grown on demand) */
+	private scratchL: Float64Array = null
+	private scratchR: Float64Array = null
 
 	constructor(globalState: {[key: string]:any}, defaultChannelState?: {[key: string]: any}) {
 		this.globalState = Utils.merge(DEFAULT_GLOBAL_STATE, globalState)
@@ -247,17 +250,39 @@ export class Mixer {
 	};
 
 
-	mix(sampleRate: number): MixResult {
-		let self = this;
-		if (this.preMixCallback) {
-			this.preMixCallback.call(this.preMixObject, this, sampleRate)
-		}
-		let i = 0, chan = 0
-		let output = []
-		let numSamples = Math.floor(sampleRate * this.globalState.secondsPerMix)
+	/**
+	 * The current mix-block length, in seconds (driven by the player/tempo).
+	 * Used by the AudioWorklet sample-clock to know how many frames a tracker
+	 * tick spans: floor(sampleRate * getSecondsPerMix()).
+	 */
+	getSecondsPerMix(): number {
+		return this.globalState.secondsPerMix
+	}
 
-		output[0] = Utils.makeArrayOf(0.0, numSamples) /* left */
-		output[1] = output[0].slice(); /* copy - right */
+	/**
+	 * Mix `count` frames of audio into the provided stereo output buffers,
+	 * starting at `outOffset`, advancing each channel's sample position.
+	 *
+	 * Unlike mix(), this does NOT run the pre/post-mix callbacks — the caller
+	 * drives tick scheduling. This lets the AudioWorklet mix arbitrary spans
+	 * (e.g. a 128-frame render quantum, or the part of one up to the next tick
+	 * boundary) into its output, while mix() remains a thin wrapper for the
+	 * offline/legacy block API.
+	 *
+	 * Accumulation is done in float64 scratch and copied out, so splitting a
+	 * block into several mixFrames() calls is bit-identical to one big call
+	 * (filters are stateful and carry across calls). `outL`/`outR` may be
+	 * number[] or Float32Array.
+	 */
+	mixFrames(outL: number[] | Float32Array, outR: number[] | Float32Array, outOffset: number, count: number, sampleRate: number): void {
+		if (this.scratchL === null || this.scratchL.length < count) {
+			this.scratchL = new Float64Array(count)
+			this.scratchR = new Float64Array(count)
+		}
+		const L = this.scratchL, R = this.scratchR
+		let i = 0, chan = 0
+		for (i = 0; i < count; i++) { L[i] = 0; R[i] = 0 }
+
 		let numChannels = this.globalState.numChannels
 		let globalVolume = this.globalState.volume
 		for (chan = 0; chan < numChannels; chan++) {
@@ -292,9 +317,9 @@ export class Mixer {
 				} else {
 					stepFunc = STEP_FUNCS.NON_REPEATING
 				}
-				for (i = 0; (i < numSamples) && (samplePos < sampleLength); i++) {
-					output[0][i] += (leftSampleData[Math.floor(samplePos)] * leftScale)
-					output[1][i] += (rightSampleData[Math.floor(samplePos)] * rightScale)
+				for (i = 0; (i < count) && (samplePos < sampleLength); i++) {
+					L[i] += (leftSampleData[Math.floor(samplePos)] * leftScale)
+					R[i] += (rightSampleData[Math.floor(samplePos)] * rightScale)
 					samplePos = stepFunc(samplePos, samplePosStep, repEnd, repLen)
 				}
 			}
@@ -302,11 +327,29 @@ export class Mixer {
 		}
 		if (this.globalState.filters) {
 			let filters = this.globalState.filters
-			for (i = 0; i < numSamples; i++) {
-				output[0][i] = filters[0].next(output[0][i])
-				output[1][i] = filters[1].next(output[1][i])
+			for (i = 0; i < count; i++) {
+				L[i] = filters[0].next(L[i])
+				R[i] = filters[1].next(R[i])
 			}
 		}
+		for (i = 0; i < count; i++) {
+			outL[outOffset + i] = L[i]
+			outR[outOffset + i] = R[i]
+		}
+	}
+
+	mix(sampleRate: number): MixResult {
+		let self = this;
+		if (this.preMixCallback) {
+			this.preMixCallback.call(this.preMixObject, this, sampleRate)
+		}
+		let numSamples = Math.floor(sampleRate * this.globalState.secondsPerMix)
+		let output = []
+		output[0] = Utils.makeArrayOf(0.0, numSamples) /* left */
+		output[1] = output[0].slice(); /* copy - right */
+
+		this.mixFrames(output[0], output[1], 0, numSamples, sampleRate)
+
 		let mixResult = new MixResult(numSamples, output)
 		if (this.postMixCallback) {
 			window.setTimeout(function() {
