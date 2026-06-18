@@ -4,7 +4,7 @@ import globals from 'globals'
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/node_modules/**', '**/.turbo/**', 'apps/harness/src/songs/**'],
+    ignores: ['**/dist/**', '**/node_modules/**', '**/.turbo/**', 'apps/visualizer/**'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

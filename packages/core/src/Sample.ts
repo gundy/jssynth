@@ -43,7 +43,13 @@ export const DEFAULT_SAMPLE_METADATA: SampleMetadata = {
 
 
 /*
- * Convert a set of raw (byte-wise) samples into arrays of doubles
+ * Convert a set of raw (byte-wise) samples into per-channel Float32Array data in
+ * the range [-1, 1).
+ *
+ * Storing as Float32Array is lossless for the 8/16/24-bit integer PCM the loaders
+ * feed in (every value is k / 2^n with |k| <= 2^n, exactly representable in
+ * float32), and it is the representation the Web Audio output and the future
+ * AudioWorklet transfer both want.
  *
  * metadata important to parsing samples is of the form:
  * {
@@ -57,8 +63,6 @@ export const DEFAULT_SAMPLE_METADATA: SampleMetadata = {
  *
  * defaults are: bits=8, channels=1
  *
- * metadata describes the content of samples.
- *
  * samples are read
  *  0..num_samples
  *    0..num_channels
@@ -66,28 +70,34 @@ export const DEFAULT_SAMPLE_METADATA: SampleMetadata = {
  */
 export class Sample {
   public readonly metadata: SampleMetadata;
-  public readonly data: number[];
+  public readonly data: Float32Array[];
 
-  constructor(sampleData: (()=>number[]) | string, metadata: any, offset: number) {
+  constructor(sampleData: (() => number[][]) | Uint8Array, metadata: any, offset: number) {
     let i, c, repeatLen;
     this.metadata = Utils.merge(DEFAULT_SAMPLE_METADATA, metadata);
 
+    /*
+     * Build the per-channel sample data as plain number[][] first so the
+     * repeat / ping-pong extension below can grow the arrays freely, then freeze
+     * each channel into a Float32Array for storage.
+     */
+    let data: number[][];
     if (typeof sampleData === 'function') {
-      this.data = sampleData();
+      data = sampleData();
     } else {
-      this.data = Sample.convertSamplesBytesToDoubles(sampleData, metadata, offset);
+      data = Sample.convertSamplesBytesToDoubles(sampleData, metadata, offset);
     }
 
     /*
      * for pingpong samples, extend the repeat loop & convert to normal repeating sample
      */
     if (this.metadata.repeatType === SampleRepeatType.REP_PINGPONG) {
-      for (c = 0; c < this.data.length; c++) {
+      for (c = 0; c < data.length; c++) {
         repeatLen = metadata.repeatEnd - metadata.repeatStart;
         for (i = 0; i < repeatLen; i++) {
-          this.data[c][metadata.repeatEnd+i] = this.data[c][metadata.repeatEnd-i];
+          data[c][metadata.repeatEnd+i] = data[c][metadata.repeatEnd-i];
         }
-        this.data[c][metadata.repeatEnd] = this.data[c][metadata.repeatStart];
+        data[c][metadata.repeatEnd] = data[c][metadata.repeatStart];
       }
       this.metadata.repeatEnd = this.metadata.repeatStart + (2 * repeatLen - 1);
       if (this.metadata.repeatEnd > this.metadata.sampleLength) {
@@ -102,16 +112,18 @@ export class Sample {
      boundaries.
      */
     if (this.metadata.repeatType !== SampleRepeatType.NON_REPEATING) {
-      for (c = 0; c < this.data.length; c++) {
-        this.data[c][metadata.repeatEnd + 1] = this.data[c][metadata.repeatEnd];
+      for (c = 0; c < data.length; c++) {
+        data[c][metadata.repeatEnd + 1] = data[c][metadata.repeatEnd];
       }
     }
+
+    this.data = data.map(channel => Float32Array.from(channel));
   }
 
   /*
    * Convert a set of raw (byte-wise) samples into arrays of doubles
    */
-  static convertSamplesBytesToDoubles(samples: string, meta: SampleMetadata, offset: number): number[] {
+  static convertSamplesBytesToDoubles(samples: Uint8Array, meta: SampleMetadata, offset: number): number[][] {
     let startOfs = offset || 0;
     let channelData = [];
     let rawData = [];
@@ -138,7 +150,7 @@ export class Sample {
         let scale = 0.5;
         let mask = 255;
         for (let bytePos = startBytePos; bytePos !== endBytePos; bytePos += bytePosDelta) {
-          data = data * 256 + samples.charCodeAt(startOfs + bytePos);
+          data = data * 256 + samples[startOfs + bytePos];
           scale = scale * 256;
           mask = mask * 256 + 255;
         }

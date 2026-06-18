@@ -1,0 +1,14 @@
+{
+  "2ND_PM.s3m": {
+    "seconds": 6,
+    "sampleRate": 44100,
+    "frames": 264600,
+    "sha256": "5979df8d34a9f029b9a598feba447fc59c3ba1cf9da66ad4fb52b9d706691624"
+  },
+  "entity.mod": {
+    "seconds": 6,
+    "sampleRate": 44100,
+    "frames": 264600,
+    "sha256": "8d3d85d35e6dc2aefd0373580d4ea775b6c787c9e686ae2c57513df53be8ebbd"
+  }
+}

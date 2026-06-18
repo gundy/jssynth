@@ -100,7 +100,26 @@ bundled S3M.
 
 ---
 
-## Milestone M2 — Bugs + refactor pass
+## Milestone M2 — Bugs + refactor pass ✅ DONE (awaiting ear-check before commit)
+
+**Status:** complete on branch `m1-monorepo-foundation`, **not yet committed** (paused for an
+ear-check). Full pipeline green; the **golden render is bit-exact** for both reference songs.
+
+**As-built notes:**
+- **Bit-exact achieved.** The golden-render guard (captured from M1 code) still matches byte-for-byte
+  after the factory fix, the full ArrayBuffer/DataView loader rewrite, and `Float32Array` sample
+  storage. The float32 claim held: lossless for the 8/16-bit PCM in these songs.
+- **Float32 *mixer accumulation* deferred to M3** (deliberately). Sample *storage* is now Float32 (it's
+  lossless), but the mixer still accumulates in float64 — moving accumulation to float32 is the one
+  change that *would* perturb output, and the worklet forces it anyway, so it belongs in M3.
+- **Discovered a third latent bug — `MOD_PT_INVERT_LOOP` (EFx "invert loop").** It indexes
+  `sample.data[i]` as if flat, but data is channel-major, so it's been a silent no-op. Preserved
+  bit-exactly (compile-only cast + comment) rather than fixed, because correcting it changes how
+  EFx-using songs sound — a deliberate audio change for a later effects pass, not this refactor.
+- XM loader stubbed (clean "not supported" error); broken `xm/effects/*` removed; tsconfig exclude gone.
+- Harness now `fetch()`es real binary song files from `public/songs/`; base64 `.ts` blobs deleted.
+- New tests: golden render (bit-exact, MOD + S3M), channel-disable regression, loader structural,
+  factory-isolation. 10 tests total, green.
 
 **Outcome:** correctness fixes and the binary-loading rewrite, each landing with a test. Still on the
 interim driver (worklet comes in M3), so behavior is verifiable in isolation.

@@ -1,29 +1,30 @@
 import {S3M_EFFECT_MAP} from './effects/S3M_EFFECT_MAP';
 import {Loader} from '../Loader'
-import {Song, FREQ_NTSC, BLANK_SONG} from "../Song";
+import {Song, FREQ_NTSC, createBlankSong} from "../Song";
 import {PatternRow} from "../PatternRow";
 import {Pattern} from "../Pattern";
 import {PatternNote} from "../PatternNote";
 import {Sample, SampleRepeatType} from "@gundy/jssynth-core";
 import {Instrument} from "../../Instrument";
-import {Utils} from "@gundy/jssynth-core";
+import {bytesToLatin1} from "../binaryUtils";
 
 export class S3MLoader implements Loader {
-  loadSong(data:string): Song {
+  loadSong(data: ArrayBuffer): Song {
+    let bytes = new Uint8Array(data);
     let readWord = function (ofs) {
-      return (data.charCodeAt(ofs + 1) * 256 + data.charCodeAt(ofs) )
+      return (bytes[ofs + 1] * 256 + bytes[ofs] )
     };
     let readByte = function (ofs) {
-      return (data.charCodeAt(ofs));
+      return (bytes[ofs]);
     };
 
-    let s3mHeader = data.substring(0x2c, 0x30);
+    let s3mHeader = bytesToLatin1(bytes, 0x2c, 0x30);
     if (s3mHeader !== 'SCRM' || readWord(0x1c) !== 0x101a) {
       console.log("Invalid S3M file");
       return;
     }
 
-    let song: Song = Utils.clone(BLANK_SONG);
+    let song: Song = createBlankSong();
     let numOrders = readWord(0x20);
     let numInstruments = readWord(0x22);
     let numPatterns = readWord(0x24);
@@ -31,7 +32,7 @@ export class S3MLoader implements Loader {
     let createdWithTrackerVersion = readWord(0x28);
     //var fileFormatInformation = readWord(0x2a);
 
-    song.name = data.substring(0, 0x1c);
+    song.name = bytesToLatin1(bytes, 0, 0x1c);
     song.type = 'S3M';
 
     let masterVolume = readByte(0x33);
@@ -190,13 +191,13 @@ export class S3MLoader implements Loader {
       let samp: Sample;
       for (i = 0; i < numInstruments; i++) {
         ofs = readWord(instrumentParapointerOfs + i * 2) * 16;
-        insType = data.substring(ofs + 0x4c, ofs + 0x4c + 4);
+        insType = bytesToLatin1(bytes, ofs + 0x4c, ofs + 0x4c + 4);
         if (insType === 'SCRS' && readByte(ofs) === 1) {
 
           flags = readByte(ofs + 0x1f);
           c2speed = readWord(ofs + 0x20) + (readWord(ofs + 0x22) * 65536);
-          samp = new Sample(data, {
-            name: data.substring(ofs + 1, ofs + 12),
+          samp = new Sample(bytes, {
+            name: bytesToLatin1(bytes, ofs + 1, ofs + 12),
             bits: (flags & 0x04) == 0x00 ? 8 : 16,
             channels: (flags & 0x02) == 0x00 ? 1 : 2,
             signed: false,
@@ -212,7 +213,7 @@ export class S3MLoader implements Loader {
           instruments[i] = new Instrument({name: "S3M instrument", numSamples: 1}, [samp]);
 
         } else {
-          instruments[i] = new Instrument({name: "Empty instrument", numSamples: 0}, [new Sample("", {
+          instruments[i] = new Instrument({name: "Empty instrument", numSamples: 0}, [new Sample(new Uint8Array(0), {
             name: "--",
             sampleLength: 0,
             repeatStart: 0,

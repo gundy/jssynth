@@ -1,5 +1,9 @@
 packages:
   - 'packages/*'
   - 'apps/*'
+  # Excluded until M4 — this is the dropped-in legacy React 0.13/SystemJS app,
+  # whose postinstall (graceful-fs v3) crashes on modern Node. Remediated in the
+  # visualizer-seam milestone.
+  - '!apps/visualizer'
 onlyBuiltDependencies:
   - esbuild
