@@ -4,6 +4,10 @@
   "description": "Pure DSP sample-playback engine (Mixer, Sample) — no DOM or Web Audio dependency",
   "author": "David Gundersen",
   "license": "MIT",
+  "repository": "https://github.com/gundy/jssynth",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
