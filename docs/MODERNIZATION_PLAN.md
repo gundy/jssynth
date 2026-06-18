@@ -224,10 +224,33 @@ state callback fires per row in sync with audio.
 
 ---
 
-## Milestone M4 — Visualizer seam
+## Milestone M4 — Visualizer ✅ DONE (awaiting eye/ear-check before commit)
 
-**Outcome:** a clean, typed subscription API and an empty React app wired to it, ready for the old
-pattern-scroller files to be dropped in later.
+**Status:** implemented on branch `m1-monorepo-foundation`, **not yet committed**. Build / test /
+typecheck / lint green; dev server serves. The original pattern-scroller was brought in and fully
+remediated (not just scaffolded — it turned out to be worth porting properly).
+
+**As-built notes:**
+- **Remediated the real app:** the dropped-in React 0.13 / JSPM / SystemJS / gulp / babel-5 visualizer
+  was rewritten as a **Vite + React 18 + TypeScript** app in `apps/visualizer` (now back in the pnpm
+  workspace). Components (`Pattern`, `SongDetails`, `InstrumentList`) and `PatternViewModelBuilder`
+  ported to TSX/TS function components, **preserving the original CSS and layout**, and updated to the
+  current `Song` data model (`patterns[n].rows[r].channels[c]`, `repeatType` enum, sample fields under
+  `.metadata`).
+- **Wired to the live engine:** loaders parse on the main thread; `JssynthAudio.load()` ships the song
+  to the worklet; `on('state')` drives the scrolling pattern + instrument highlight. Effect codes
+  render from the main-thread song's intact `effectMap`.
+- **Invert-loop investigation aids:** (1) a **file picker** to load any `.mod`/`.s3m` from disk without
+  rebuilding; (2) **EFx (invert-loop) cells highlighted red** in the pattern grid, so they pop as the
+  playing row scrolls past — the visual substitute for the impossible worklet `console.log`.
+- tracker now also exports `MOD_PERIOD_TABLE` + the `Pattern`/`PatternRow`/`PatternNote`/`EffectMapEntry`
+  types for the UI.
+
+**Note:** prev/next-position and filter-toggle transport (old `Player` methods, now worklet-side) were
+left out — easy to add later as worklet messages if wanted.
+
+**Outcome (original):** a clean, typed subscription API and a React app wired to it. Delivered as a
+working remediated visualizer rather than an empty scaffold.
 
 - [ ] Formalize the player-state event stream (the existing `registerCallback`/`stateCallback` hooks
       are the basis): a typed `PlayerStateEvent { pos, row, speed, bpm, channels: ChannelView[],
